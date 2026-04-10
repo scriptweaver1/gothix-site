@@ -232,9 +232,7 @@ const SAMPLE_AUDIOS = [
 
 let activeSource = 'all';
 let activeCategory = 'all';
-let cardsPerPage = 12;
-let currentPage = 1;
-const TEXT_SIZES = ['text-size-small', 'text-size-medium', 'text-size-large'];
+const TEXT_SIZES = ['text-size-12', 'text-size-14', 'text-size-16', 'text-size-18'];
 
 
 /* ============================================
@@ -245,75 +243,142 @@ const grid = document.getElementById('audioGrid');
 const emptyState = document.getElementById('emptyState');
 const searchInput = document.getElementById('searchInput');
 const sortSelect = document.getElementById('sortSelect');
-const paginationEl = document.getElementById('pagination');
 
 const redditIcon = `<svg viewBox="0 0 24 24" width="18" height="18" fill="currentColor"><path d="M12 0A12 12 0 0 0 0 12a12 12 0 0 0 12 12 12 12 0 0 0 12-12A12 12 0 0 0 12 0zm5.01 4.744c.688 0 1.25.561 1.25 1.249a1.25 1.25 0 0 1-2.498.056l-2.597-.547-.8 3.747c1.824.07 3.48.632 4.674 1.488.308-.309.73-.491 1.207-.491.968 0 1.754.786 1.754 1.754 0 .716-.435 1.333-1.01 1.614a3.111 3.111 0 0 1 .042.52c0 2.694-3.13 4.87-7.004 4.87-3.874 0-7.004-2.176-7.004-4.87 0-.183.015-.366.043-.534A1.748 1.748 0 0 1 4.028 12c0-.968.786-1.754 1.754-1.754.463 0 .898.196 1.207.49 1.207-.883 2.878-1.43 4.744-1.487l.885-4.182a.342.342 0 0 1 .14-.197.35.35 0 0 1 .238-.042l2.906.617a1.214 1.214 0 0 1 1.108-.701zM9.25 12C8.561 12 8 12.562 8 13.25c0 .687.561 1.248 1.25 1.248.687 0 1.248-.561 1.248-1.249 0-.688-.561-1.249-1.249-1.249zm5.5 0c-.687 0-1.248.561-1.248 1.25 0 .687.561 1.248 1.249 1.248.688 0 1.249-.561 1.249-1.249 0-.687-.562-1.249-1.25-1.249zm-5.466 3.99a.327.327 0 0 0-.231.094.33.33 0 0 0 0 .463c.842.842 2.484.913 2.961.913.477 0 2.105-.056 2.961-.913a.361.361 0 0 0 .029-.463.33.33 0 0 0-.464 0c-.547.533-1.684.73-2.512.73-.828 0-1.979-.196-2.512-.73a.326.326 0 0 0-.232-.095z"/></svg>`;
 const patreonIcon = `<svg viewBox="0 0 24 24" width="18" height="18" fill="currentColor"><path d="M14.82 2.41c3.96 0 7.18 3.24 7.18 7.21 0 3.96-3.22 7.18-7.18 7.18-3.97 0-7.21-3.22-7.21-7.18 0-3.97 3.24-7.21 7.21-7.21M2 21.6h3.5V2.41H2V21.6z"/></svg>`;
 
-function renderCards(audios) {
-    grid.innerHTML = '';
-    if (audios.length === 0) { emptyState.style.display = 'block'; paginationEl.innerHTML = ''; return; }
+function buildCardInner(a) {
+    const tagsHTML = a.tags.map(t => `<span class="card-tag">${t}</span>`).join('');
+    let linksHTML = '';
+    if (a.redditLink) linksHTML += `<a href="${a.redditLink}" target="_blank" class="card-link link-reddit" title="View on Reddit">${redditIcon}</a>`;
+    if (a.patreonLink) linksHTML += `<a href="${a.patreonLink}" target="_blank" class="card-link link-patreon" title="View on Patreon">${patreonIcon}</a>`;
+
+    return `
+        <div class="card-header">
+            <span class="card-title">${a.title}</span>
+        </div>
+        <div class="card-tags">${tagsHTML}</div>
+        <div class="card-meta">
+            <span>✦ ${a.date}</span>
+            <span>⏱ ${a.duration}</span>
+        </div>
+        <div class="card-links">${linksHTML}</div>
+    `;
+}
+
+// Track current card elements by title key
+let currentCardMap = new Map();
+let isTransitioning = false;
+let pendingUpdate = false;
+
+function reconcileCards(audios) {
+    if (audios.length === 0) {
+        // Fade out remaining cards then clear
+        const existing = grid.querySelectorAll('.audio-card');
+        if (existing.length === 0) {
+            emptyState.style.display = 'block';
+            return;
+        }
+        existing.forEach(card => card.classList.add('exiting'));
+        setTimeout(() => {
+            grid.innerHTML = '';
+            currentCardMap.clear();
+            emptyState.style.display = 'block';
+        }, 320);
+        return;
+    }
     emptyState.style.display = 'none';
 
-    // Pagination
-    const totalPages = cardsPerPage === Infinity ? 1 : Math.ceil(audios.length / cardsPerPage);
-    if (currentPage > totalPages) currentPage = totalPages;
-    const start = (currentPage - 1) * cardsPerPage;
-    const pageAudios = cardsPerPage === Infinity ? audios : audios.slice(start, start + cardsPerPage);
+    const newKeys = audios.map(a => a.title);
+    const newKeySet = new Set(newKeys);
 
-    pageAudios.forEach((a, i) => {
-        const card = document.createElement('div');
-        card.className = 'audio-card';
-        card.style.animationDelay = `${i * 0.06}s`;
+    // Phase 1: Fade out content of cards that stay, mark cards that leave
+    const keepCards = new Map();
+    const removeCards = [];
 
-        const tagsHTML = a.tags.map(t => `<span class="card-tag">${t}</span>`).join('');
-
-        let linksHTML = '';
-        if (a.redditLink) linksHTML += `<a href="${a.redditLink}" target="_blank" class="card-link link-reddit" title="View on Reddit">${redditIcon}</a>`;
-        if (a.patreonLink) linksHTML += `<a href="${a.patreonLink}" target="_blank" class="card-link link-patreon" title="View on Patreon">${patreonIcon}</a>`;
-
-        card.innerHTML = `
-            <div class="card-header">
-                <span class="card-title">${a.title}</span>
-            </div>
-            <div class="card-tags">${tagsHTML}</div>
-            <div class="card-meta">
-                <span>✦ ${a.date}</span>
-                <span>⏱ ${a.duration}</span>
-            </div>
-            <div class="card-links">${linksHTML}</div>
-        `;
-        grid.appendChild(card);
+    currentCardMap.forEach((cardEl, key) => {
+        if (newKeySet.has(key)) {
+            keepCards.set(key, cardEl);
+            const inner = cardEl.querySelector('.card-inner');
+            if (inner) inner.classList.add('fade-out');
+        } else {
+            removeCards.push(cardEl);
+            cardEl.classList.add('exiting');
+        }
     });
 
-    // Render pagination
-    paginationEl.innerHTML = '';
-    if (totalPages > 1) {
-        for (let p = 1; p <= totalPages; p++) {
-            const btn = document.createElement('button');
-            btn.className = 'page-btn' + (p === currentPage ? ' active' : '');
-            btn.textContent = p;
-            btn.addEventListener('click', () => { currentPage = p; update(); window.scrollTo({ top: 300, behavior: 'smooth' }); });
-            paginationEl.appendChild(btn);
-        }
-    }
+    // Phase 2: After fade-out, rebuild
+    setTimeout(() => {
+        // Remove exiting cards
+        removeCards.forEach(card => {
+            card.remove();
+            // Clean from map
+            currentCardMap.forEach((v, k) => { if (v === card) currentCardMap.delete(k); });
+        });
+
+        // Build new card order
+        const newCardMap = new Map();
+        const fragment = document.createDocumentFragment();
+
+        audios.forEach((a, i) => {
+            const key = a.title;
+            if (keepCards.has(key)) {
+                // Update content of existing card
+                const cardEl = keepCards.get(key);
+                const inner = cardEl.querySelector('.card-inner');
+                if (inner) {
+                    inner.innerHTML = buildCardInner(a);
+                }
+                newCardMap.set(key, cardEl);
+            } else {
+                // Create new card
+                const card = document.createElement('div');
+                card.className = 'audio-card entering';
+                card.style.animationDelay = `${i * 0.05}s`;
+
+                const inner = document.createElement('div');
+                inner.className = 'card-inner fade-out';
+                inner.innerHTML = buildCardInner(a);
+                card.appendChild(inner);
+
+                newCardMap.set(key, card);
+            }
+        });
+
+        // Re-order: clear grid and append in correct order
+        grid.innerHTML = '';
+        audios.forEach(a => {
+            const card = newCardMap.get(a.title);
+            if (card) grid.appendChild(card);
+        });
+
+        currentCardMap = newCardMap;
+
+        // Phase 3: Fade in all content
+        requestAnimationFrame(() => {
+            grid.querySelectorAll('.card-inner').forEach(inner => {
+                inner.classList.remove('fade-out');
+                inner.classList.add('fade-in');
+            });
+            // Clean up entering class after animation
+            setTimeout(() => {
+                grid.querySelectorAll('.audio-card.entering').forEach(c => c.classList.remove('entering'));
+            }, 450);
+        });
+
+    }, 320); // matches fade-out duration
 }
 
 function getFilteredSorted() {
     let audios = [...SAMPLE_AUDIOS];
 
-    // Persona filter
     const persona = document.documentElement.getAttribute('data-persona');
     if (persona === 'gothix') audios = audios.filter(a => a.persona === 'Gothix');
     else if (persona === 'minxy') audios = audios.filter(a => a.persona === 'Minxy');
 
-    // Source filter
     if (activeSource !== 'all') audios = audios.filter(a => a.source === activeSource);
-
-    // Category filter
     if (activeCategory !== 'all') audios = audios.filter(a => a.category === activeCategory);
 
-    // Search
     const query = searchInput.value.toLowerCase().trim();
     if (query) {
         audios = audios.filter(a =>
@@ -322,7 +387,6 @@ function getFilteredSorted() {
         );
     }
 
-    // Sort
     const sort = sortSelect.value;
     if (sort === 'newest') audios.sort((a, b) => b.date.localeCompare(a.date));
     else if (sort === 'oldest') audios.sort((a, b) => a.date.localeCompare(b.date));
@@ -332,7 +396,35 @@ function getFilteredSorted() {
 }
 
 function update() {
-    renderCards(getFilteredSorted());
+    if (isTransitioning) { pendingUpdate = true; return; }
+    isTransitioning = true;
+    const audios = getFilteredSorted();
+    reconcileCards(audios);
+    setTimeout(() => {
+        isTransitioning = false;
+        if (pendingUpdate) { pendingUpdate = false; update(); }
+    }, 700);
+}
+
+// Initial render (no transition, just build)
+function initialRender() {
+    const audios = getFilteredSorted();
+    audios.forEach((a, i) => {
+        const card = document.createElement('div');
+        card.className = 'audio-card entering';
+        card.style.animationDelay = `${i * 0.06}s`;
+
+        const inner = document.createElement('div');
+        inner.className = 'card-inner';
+        inner.innerHTML = buildCardInner(a);
+        card.appendChild(inner);
+
+        grid.appendChild(card);
+        currentCardMap.set(a.title, card);
+    });
+    setTimeout(() => {
+        grid.querySelectorAll('.entering').forEach(c => c.classList.remove('entering'));
+    }, 600);
 }
 
 
@@ -340,8 +432,8 @@ function update() {
    EVENT LISTENERS
    ============================================ */
 
-searchInput.addEventListener('input', () => { currentPage = 1; update(); });
-sortSelect.addEventListener('change', () => { currentPage = 1; update(); });
+searchInput.addEventListener('input', update);
+sortSelect.addEventListener('change', update);
 
 // Category buttons
 document.querySelectorAll('#categoryList .category-btn').forEach(btn => {
@@ -349,7 +441,6 @@ document.querySelectorAll('#categoryList .category-btn').forEach(btn => {
         document.querySelectorAll('#categoryList .category-btn').forEach(b => b.classList.remove('active'));
         btn.classList.add('active');
         activeCategory = btn.dataset.category;
-        currentPage = 1;
         update();
     });
 });
@@ -360,27 +451,47 @@ document.querySelectorAll('#sourceList .category-btn').forEach(btn => {
         document.querySelectorAll('#sourceList .category-btn').forEach(b => b.classList.remove('active'));
         btn.classList.add('active');
         activeSource = btn.dataset.source;
-        currentPage = 1;
         update();
     });
 });
 
-// Text size slider
-const textSizeSlider = document.getElementById('textSizeSlider');
-function applyTextSize(val) {
-    document.body.classList.remove(...TEXT_SIZES);
-    document.body.classList.add(TEXT_SIZES[val]);
-}
-textSizeSlider.addEventListener('input', () => applyTextSize(textSizeSlider.value));
-applyTextSize(1); // default medium
-
-// Cards per page
-document.querySelectorAll('.cpp-btn').forEach(btn => {
+// Cards per row
+document.querySelectorAll('.cpr-btn').forEach(btn => {
     btn.addEventListener('click', () => {
-        document.querySelectorAll('.cpp-btn').forEach(b => b.classList.remove('active'));
+        document.querySelectorAll('.cpr-btn').forEach(b => b.classList.remove('active'));
         btn.classList.add('active');
-        cardsPerPage = btn.dataset.count === 'all' ? Infinity : parseInt(btn.dataset.count);
-        currentPage = 1;
+        grid.className = 'audio-grid cols-' + btn.dataset.cols;
         update();
     });
 });
+// Set default
+grid.classList.add('cols-2');
+
+// Accessibility widget
+const a11yToggle = document.getElementById('a11yToggle');
+const a11yMenu = document.getElementById('a11yMenu');
+
+a11yToggle.addEventListener('click', (e) => {
+    e.stopPropagation();
+    a11yMenu.classList.toggle('open');
+});
+
+document.addEventListener('click', (e) => {
+    if (!document.getElementById('a11yWidget').contains(e.target)) {
+        a11yMenu.classList.remove('open');
+    }
+});
+
+document.querySelectorAll('.a11y-size-btn').forEach(btn => {
+    btn.addEventListener('click', () => {
+        document.querySelectorAll('.a11y-size-btn').forEach(b => b.classList.remove('active'));
+        btn.classList.add('active');
+        document.body.classList.remove(...TEXT_SIZES);
+        document.body.classList.add(TEXT_SIZES[btn.dataset.size]);
+    });
+});
+// Default: 14 (index 1)
+document.body.classList.add('text-size-14');
+
+// Initial render
+initialRender();
