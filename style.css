@@ -18,8 +18,8 @@
     --bg-card: #161622;
     --bg-card-hover: #1c1c2e;
     --text-primary: #e8e0f0;
-    --text-secondary: #9a8fad;
-    --text-muted: #5e5577;
+    --text-secondary: #beb4cc;
+    --text-muted: #8a7ea0;
     --accent: #c41e3a;
     --accent-glow: rgba(196, 30, 58, 0.35);
     --accent-secondary: #8b1a9e;
@@ -51,8 +51,8 @@
     --bg-card: #181626;
     --bg-card-hover: #1e1b30;
     --text-primary: #ece4f4;
-    --text-secondary: #a99abb;
-    --text-muted: #6c5e82;
+    --text-secondary: #c4b8d4;
+    --text-muted: #9488a8;
     --accent: #d05a7a;
     --accent-glow: rgba(208, 90, 122, 0.3);
     --accent-secondary: #9a5ec0;
@@ -84,8 +84,8 @@
     --bg-card: #1a1628;
     --bg-card-hover: #211c34;
     --text-primary: #f0e8f5;
-    --text-secondary: #b8a5cc;
-    --text-muted: #7a6691;
+    --text-secondary: #d0c0e0;
+    --text-muted: #a090b4;
     --accent: #e890b0;
     --accent-glow: rgba(232, 144, 176, 0.3);
     --accent-secondary: #b388d9;
@@ -406,22 +406,22 @@ body {
 .card-tags { display: flex; flex-wrap: wrap; gap: 0.4rem; }
 
 .card-tag {
-    font-family: var(--font-body); font-size: 0.72rem;
-    padding: 0.2rem 0.55rem; border-radius: var(--tag-radius);
-    background: rgba(255, 255, 255, 0.04); color: var(--text-secondary);
-    border: 1px solid rgba(255, 255, 255, 0.06);
+    font-family: var(--font-body); font-size: 0.75rem;
+    padding: 0.2rem 0.6rem; border-radius: var(--tag-radius);
+    background: rgba(255, 255, 255, 0.07); color: var(--text-secondary);
+    border: 1px solid rgba(255, 255, 255, 0.1);
     transition: border-radius var(--transition-speed) var(--transition-ease), color 0.3s ease;
 }
 .card-tag.persona-gothix {
     border-color: var(--color-gothic-red); color: var(--color-gothic-red);
-    background: rgba(196, 30, 58, 0.08);
+    background: rgba(196, 30, 58, 0.12);
 }
 .card-tag.persona-minxy {
     border-color: var(--color-mynx-purple); color: var(--color-mynx-purple);
-    background: rgba(179, 136, 217, 0.1);
+    background: rgba(179, 136, 217, 0.14);
 }
 
-.card-meta { display: flex; align-items: center; gap: 0.75rem; font-size: 0.82rem; color: var(--text-muted); }
+.card-meta { display: flex; align-items: center; gap: 0.75rem; font-size: 0.85rem; color: var(--text-secondary); }
 .card-meta span { display: flex; align-items: center; gap: 0.3rem; }
 
 .card-links { display: flex; gap: 0.6rem; margin-top: auto; padding-top: 0.5rem; }
