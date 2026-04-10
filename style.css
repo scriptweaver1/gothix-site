@@ -34,6 +34,10 @@
     --font-body: 'Cormorant Garamond', serif;
     --card-radius: 4px;
     --tag-radius: 2px;
+    --giant-star-core: #8b1a1a;
+    --giant-star-mid: rgba(160, 20, 30, 0.6);
+    --giant-star-outer: rgba(120, 10, 20, 0.2);
+    --giant-star-haze: rgba(196, 30, 58, 0.06);
 }
 
 /* ——— BOTH (default) ——— */
@@ -59,6 +63,10 @@
     --font-body: 'Quicksand', sans-serif;
     --card-radius: 10px;
     --tag-radius: 6px;
+    --giant-star-core: #c8a0e8;
+    --giant-star-mid: rgba(160, 100, 200, 0.5);
+    --giant-star-outer: rgba(140, 80, 200, 0.15);
+    --giant-star-haze: rgba(160, 100, 200, 0.05);
 }
 
 /* ——— MINXY ——— */
@@ -84,6 +92,10 @@
     --font-body: 'Quicksand', sans-serif;
     --card-radius: 16px;
     --tag-radius: 99px;
+    --giant-star-core: #ffe4a0;
+    --giant-star-mid: rgba(255, 200, 100, 0.5);
+    --giant-star-outer: rgba(255, 180, 80, 0.15);
+    --giant-star-haze: rgba(255, 200, 120, 0.05);
 }
 
 /* ============================================
@@ -111,9 +123,72 @@ body {
 .nebula-glow {
     position: fixed; inset: 0; z-index: 0; pointer-events: none;
     background:
-        radial-gradient(ellipse 60% 50% at 20% 30%, var(--nebula-color-1), transparent),
-        radial-gradient(ellipse 50% 60% at 80% 70%, var(--nebula-color-2), transparent);
+        radial-gradient(ellipse 80% 70% at 22% 10%, var(--nebula-color-1), transparent),
+        radial-gradient(ellipse 60% 50% at 35% 25%, var(--nebula-color-2), transparent);
     transition: background var(--transition-speed) var(--transition-ease);
+}
+
+/* ============================================
+   GIANT STAR (background celestial body)
+   ============================================ */
+
+.giant-star {
+    position: fixed;
+    z-index: 0;
+    pointer-events: none;
+    /* Positioned upper-left so the glow radiates across the page */
+    top: -8vh;
+    left: 12vw;
+    width: 40vmax;
+    height: 40vmax;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+}
+
+.star-core {
+    position: absolute;
+    width: 6vmax;
+    height: 6vmax;
+    border-radius: 50%;
+    background: radial-gradient(
+        circle,
+        var(--giant-star-core) 0%,
+        var(--giant-star-mid) 50%,
+        transparent 100%
+    );
+    box-shadow:
+        0 0 40px 10px var(--giant-star-mid),
+        0 0 80px 30px var(--giant-star-outer);
+    transition:
+        background var(--transition-speed) var(--transition-ease),
+        box-shadow var(--transition-speed) var(--transition-ease);
+    animation: starPulse 6s ease-in-out infinite;
+}
+
+.star-corona {
+    position: absolute;
+    width: 100%;
+    height: 100%;
+    border-radius: 50%;
+    background: radial-gradient(
+        circle,
+        var(--giant-star-outer) 0%,
+        var(--giant-star-haze) 40%,
+        transparent 70%
+    );
+    transition: background var(--transition-speed) var(--transition-ease);
+    animation: coronaPulse 8s ease-in-out infinite;
+}
+
+@keyframes starPulse {
+    0%, 100% { transform: scale(1); opacity: 1; }
+    50% { transform: scale(1.08); opacity: 0.9; }
+}
+
+@keyframes coronaPulse {
+    0%, 100% { transform: scale(1); opacity: 0.8; }
+    50% { transform: scale(1.04); opacity: 1; }
 }
 
 /* ============================================
