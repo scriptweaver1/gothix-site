@@ -25,8 +25,12 @@
     --accent-secondary: #8b1a9e;
     --border-color: rgba(196, 30, 58, 0.15);
     --border-hover: rgba(196, 30, 58, 0.4);
-    --card-shadow: 0 4px 24px rgba(0, 0, 0, 0.5), 0 0 40px rgba(196, 30, 58, 0.06);
-    --card-shadow-hover: 0 8px 40px rgba(0, 0, 0, 0.6), 0 0 60px rgba(196, 30, 58, 0.15);
+    --metallic-border: linear-gradient(145deg, #4a1215, #8b3030, #c47045, #8b3030, #4a1215);
+    --metallic-border-hover: linear-gradient(145deg, #6b1a1e, #c44040, #e8a070, #c44040, #6b1a1e);
+    --metallic-glow: rgba(180, 80, 60, 0.15);
+    --metallic-glow-hover: rgba(196, 90, 60, 0.3);
+    --card-shadow: 0 4px 24px rgba(0, 0, 0, 0.5), 0 0 20px var(--metallic-glow);
+    --card-shadow-hover: 0 8px 40px rgba(0, 0, 0, 0.6), 0 0 40px var(--metallic-glow-hover);
     --nebula-color-1: rgba(196, 30, 58, 0.06);
     --nebula-color-2: rgba(139, 26, 158, 0.04);
     --star-color: rgba(255, 200, 200, 0.8);
@@ -54,8 +58,12 @@
     --accent-secondary: #9a5ec0;
     --border-color: rgba(208, 90, 122, 0.12);
     --border-hover: rgba(208, 90, 122, 0.35);
-    --card-shadow: 0 4px 24px rgba(0, 0, 0, 0.45), 0 0 40px rgba(208, 90, 122, 0.05);
-    --card-shadow-hover: 0 8px 40px rgba(0, 0, 0, 0.55), 0 0 60px rgba(208, 90, 122, 0.12);
+    --metallic-border: linear-gradient(145deg, #3a2455, #7a50a0, #c9a0e0, #b08ad0, #7a50a0, #3a2455);
+    --metallic-border-hover: linear-gradient(145deg, #5a3878, #a070c8, #e0c0f5, #c8a0e8, #a070c8, #5a3878);
+    --metallic-glow: rgba(160, 100, 200, 0.12);
+    --metallic-glow-hover: rgba(180, 120, 220, 0.25);
+    --card-shadow: 0 4px 24px rgba(0, 0, 0, 0.45), 0 0 20px var(--metallic-glow);
+    --card-shadow-hover: 0 8px 40px rgba(0, 0, 0, 0.55), 0 0 40px var(--metallic-glow-hover);
     --nebula-color-1: rgba(196, 30, 58, 0.04);
     --nebula-color-2: rgba(179, 136, 217, 0.04);
     --star-color: rgba(230, 200, 240, 0.8);
@@ -83,8 +91,12 @@
     --accent-secondary: #b388d9;
     --border-color: rgba(232, 144, 176, 0.12);
     --border-hover: rgba(232, 144, 176, 0.35);
-    --card-shadow: 0 4px 24px rgba(0, 0, 0, 0.4), 0 0 40px rgba(232, 144, 176, 0.05);
-    --card-shadow-hover: 0 8px 40px rgba(0, 0, 0, 0.5), 0 0 60px rgba(232, 144, 176, 0.12);
+    --metallic-border: linear-gradient(145deg, #8a7a60, #c8b898, #f0e8d8, #e8d8c0, #c8b898, #8a7a60);
+    --metallic-border-hover: linear-gradient(145deg, #a89878, #e0d0b0, #fff8f0, #f0e0c8, #e0d0b0, #a89878);
+    --metallic-glow: rgba(220, 200, 160, 0.1);
+    --metallic-glow-hover: rgba(240, 220, 180, 0.22);
+    --card-shadow: 0 4px 24px rgba(0, 0, 0, 0.4), 0 0 20px var(--metallic-glow);
+    --card-shadow-hover: 0 8px 40px rgba(0, 0, 0, 0.5), 0 0 40px var(--metallic-glow-hover);
     --nebula-color-1: rgba(232, 144, 176, 0.06);
     --nebula-color-2: rgba(179, 136, 217, 0.05);
     --star-color: rgba(240, 200, 255, 0.8);
@@ -347,12 +359,15 @@ body {
 .audio-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(320px, 1fr)); gap: 1.25rem; }
 
 .audio-card {
-    background: var(--bg-card); border: 1px solid var(--border-color);
+    background:
+        linear-gradient(var(--bg-card), var(--bg-card)) padding-box,
+        var(--metallic-border) border-box;
+    border: 1.5px solid transparent;
     border-radius: var(--card-radius); padding: 1.4rem 1.5rem;
     display: flex; flex-direction: column; gap: 0.75rem;
     box-shadow: var(--card-shadow);
     transition: background var(--transition-speed) var(--transition-ease),
-                border-color 0.3s ease, border-radius var(--transition-speed) var(--transition-ease),
+                border-radius var(--transition-speed) var(--transition-ease),
                 box-shadow 0.3s ease, transform 0.3s ease;
     animation: cardFadeIn 0.4s ease both;
 }
@@ -363,8 +378,11 @@ body {
 }
 
 .audio-card:hover {
-    border-color: var(--border-hover); box-shadow: var(--card-shadow-hover);
-    transform: translateY(-3px); background: var(--bg-card-hover);
+    background:
+        linear-gradient(var(--bg-card-hover), var(--bg-card-hover)) padding-box,
+        var(--metallic-border-hover) border-box;
+    box-shadow: var(--card-shadow-hover);
+    transform: translateY(-3px);
 }
 
 .card-header { display: flex; justify-content: space-between; align-items: flex-start; gap: 0.75rem; }
