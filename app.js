@@ -266,107 +266,99 @@ function buildCardInner(a) {
     `;
 }
 
-// Track current card elements by title key
-let currentCardMap = new Map();
+// Persistent card slot elements
+let cardSlots = [];
 let isTransitioning = false;
 let pendingUpdate = false;
+const FADE_MS = 300;
 
-function reconcileCards(audios) {
-    if (audios.length === 0) {
-        // Fade out remaining cards then clear
-        const existing = grid.querySelectorAll('.audio-card');
-        if (existing.length === 0) {
-            emptyState.style.display = 'block';
-            return;
-        }
-        existing.forEach(card => card.classList.add('exiting'));
-        setTimeout(() => {
-            grid.innerHTML = '';
-            currentCardMap.clear();
-            emptyState.style.display = 'block';
-        }, 320);
+function createCardSlot() {
+    const card = document.createElement('div');
+    card.className = 'audio-card';
+    const inner = document.createElement('div');
+    inner.className = 'card-inner';
+    card.appendChild(inner);
+    return card;
+}
+
+function update() {
+    if (isTransitioning) { pendingUpdate = true; return; }
+
+    const audios = getFilteredSorted();
+
+    // If no results at all, fade out everything then show empty state
+    if (audios.length === 0 && cardSlots.length === 0) {
+        emptyState.style.display = 'block';
         return;
     }
+
+    isTransitioning = true;
     emptyState.style.display = 'none';
 
-    const newKeys = audios.map(a => a.title);
-    const newKeySet = new Set(newKeys);
-
-    // Phase 1: Fade out content of cards that stay, mark cards that leave
-    const keepCards = new Map();
-    const removeCards = [];
-
-    currentCardMap.forEach((cardEl, key) => {
-        if (newKeySet.has(key)) {
-            keepCards.set(key, cardEl);
-            const inner = cardEl.querySelector('.card-inner');
-            if (inner) inner.classList.add('fade-out');
-        } else {
-            removeCards.push(cardEl);
-            cardEl.classList.add('exiting');
-        }
+    // Phase 1: Fade out all existing card content
+    cardSlots.forEach(card => {
+        const inner = card.querySelector('.card-inner');
+        if (inner) inner.classList.add('fade-out');
     });
 
-    // Phase 2: After fade-out, rebuild
     setTimeout(() => {
-        // Remove exiting cards
-        removeCards.forEach(card => {
-            card.remove();
-            // Clean from map
-            currentCardMap.forEach((v, k) => { if (v === card) currentCardMap.delete(k); });
-        });
+        const needed = audios.length;
+        const current = cardSlots.length;
 
-        // Build new card order
-        const newCardMap = new Map();
-        const fragment = document.createDocumentFragment();
+        // Shrink: fade out and remove extra slots
+        if (needed < current) {
+            const extras = cardSlots.splice(needed);
+            extras.forEach(card => {
+                card.classList.add('exiting');
+            });
+            setTimeout(() => {
+                extras.forEach(card => card.remove());
+                if (needed === 0) emptyState.style.display = 'block';
+            }, FADE_MS);
+        }
 
+        // Grow: add new empty slots
+        if (needed > current) {
+            for (let i = current; i < needed; i++) {
+                const card = createCardSlot();
+                card.style.opacity = '0';
+                grid.appendChild(card);
+                cardSlots.push(card);
+                // Trigger entrance
+                requestAnimationFrame(() => {
+                    card.style.transition = `opacity 0.4s ease, transform 0.4s ease`;
+                    card.style.opacity = '1';
+                });
+            }
+        }
+
+        // Phase 2: Swap content into all active slots
         audios.forEach((a, i) => {
-            const key = a.title;
-            if (keepCards.has(key)) {
-                // Update content of existing card
-                const cardEl = keepCards.get(key);
-                const inner = cardEl.querySelector('.card-inner');
-                if (inner) {
-                    inner.innerHTML = buildCardInner(a);
-                }
-                newCardMap.set(key, cardEl);
-            } else {
-                // Create new card
-                const card = document.createElement('div');
-                card.className = 'audio-card entering';
-                card.style.animationDelay = `${i * 0.05}s`;
-
-                const inner = document.createElement('div');
-                inner.className = 'card-inner fade-out';
+            const inner = cardSlots[i].querySelector('.card-inner');
+            if (inner) {
                 inner.innerHTML = buildCardInner(a);
-                card.appendChild(inner);
-
-                newCardMap.set(key, card);
+                inner.classList.add('fade-out'); // start hidden
             }
         });
 
-        // Re-order: clear grid and append in correct order
-        grid.innerHTML = '';
-        audios.forEach(a => {
-            const card = newCardMap.get(a.title);
-            if (card) grid.appendChild(card);
-        });
-
-        currentCardMap = newCardMap;
-
-        // Phase 3: Fade in all content
+        // Phase 3: Fade in new content
         requestAnimationFrame(() => {
-            grid.querySelectorAll('.card-inner').forEach(inner => {
-                inner.classList.remove('fade-out');
-                inner.classList.add('fade-in');
+            requestAnimationFrame(() => {
+                cardSlots.forEach(card => {
+                    const inner = card.querySelector('.card-inner');
+                    if (inner) {
+                        inner.classList.remove('fade-out');
+                    }
+                });
             });
-            // Clean up entering class after animation
-            setTimeout(() => {
-                grid.querySelectorAll('.audio-card.entering').forEach(c => c.classList.remove('entering'));
-            }, 450);
         });
 
-    }, 320); // matches fade-out duration
+        setTimeout(() => {
+            isTransitioning = false;
+            if (pendingUpdate) { pendingUpdate = false; update(); }
+        }, FADE_MS + 100);
+
+    }, FADE_MS);
 }
 
 function getFilteredSorted() {
@@ -395,33 +387,23 @@ function getFilteredSorted() {
     return audios;
 }
 
-function update() {
-    if (isTransitioning) { pendingUpdate = true; return; }
-    isTransitioning = true;
-    const audios = getFilteredSorted();
-    reconcileCards(audios);
-    setTimeout(() => {
-        isTransitioning = false;
-        if (pendingUpdate) { pendingUpdate = false; update(); }
-    }, 700);
-}
-
-// Initial render (no transition, just build)
+// Initial render — build slots immediately, no transition
 function initialRender() {
     const audios = getFilteredSorted();
+    if (audios.length === 0) { emptyState.style.display = 'block'; return; }
+
     audios.forEach((a, i) => {
-        const card = document.createElement('div');
-        card.className = 'audio-card entering';
+        const card = createCardSlot();
+        card.classList.add('entering');
         card.style.animationDelay = `${i * 0.06}s`;
 
-        const inner = document.createElement('div');
-        inner.className = 'card-inner';
+        const inner = card.querySelector('.card-inner');
         inner.innerHTML = buildCardInner(a);
-        card.appendChild(inner);
 
         grid.appendChild(card);
-        currentCardMap.set(a.title, card);
+        cardSlots.push(card);
     });
+
     setTimeout(() => {
         grid.querySelectorAll('.entering').forEach(c => c.classList.remove('entering'));
     }, 600);
