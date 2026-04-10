@@ -81,21 +81,13 @@
             <div class="sidebar-divider"></div>
 
             <div class="sidebar-section">
-                <h3 class="sidebar-heading">Display</h3>
+                <h3 class="sidebar-heading">Layout</h3>
 
-                <label class="sidebar-label">Text Size</label>
-                <div class="slider-row">
-                    <span class="slider-label-sm">A</span>
-                    <input type="range" id="textSizeSlider" class="styled-range" min="0" max="2" step="1" value="1">
-                    <span class="slider-label-lg">A</span>
-                </div>
-
-                <label class="sidebar-label">Cards Per Page</label>
-                <div class="cards-per-page" id="cardsPerPage">
-                    <button class="cpp-btn" data-count="6">6</button>
-                    <button class="cpp-btn active" data-count="12">12</button>
-                    <button class="cpp-btn" data-count="24">24</button>
-                    <button class="cpp-btn" data-count="all">All</button>
+                <label class="sidebar-label">Cards Per Row</label>
+                <div class="cards-per-row" id="cardsPerRow">
+                    <button class="cpr-btn" data-cols="1">1</button>
+                    <button class="cpr-btn active" data-cols="2">2</button>
+                    <button class="cpr-btn" data-cols="3">3</button>
                 </div>
             </div>
         </aside>
@@ -121,8 +113,6 @@
                 <!-- Cards injected by JS -->
             </section>
 
-            <div class="pagination" id="pagination"></div>
-
             <div class="empty-state" id="emptyState" style="display:none;">
                 <p>No audios found ✦</p>
             </div>
@@ -135,6 +125,23 @@
         </div>
         <p>Made with 🖤 for <strong>GothicMynx</strong></p>
     </footer>
+
+    <div class="a11y-widget" id="a11yWidget">
+        <button class="a11y-toggle" id="a11yToggle" aria-label="Accessibility options">
+            <svg viewBox="0 0 24 24" width="20" height="20" fill="none" stroke="currentColor" stroke-width="2">
+                <circle cx="12" cy="4.5" r="2.5"/>
+                <path d="M12 7v5m0 0l-4 6m4-6l4 6"/>
+                <path d="M6 10h12"/>
+            </svg>
+        </button>
+        <div class="a11y-menu" id="a11yMenu">
+            <span class="a11y-menu-label">Font Size</span>
+            <button class="a11y-size-btn" data-size="0">12</button>
+            <button class="a11y-size-btn active" data-size="1">14</button>
+            <button class="a11y-size-btn" data-size="2">16</button>
+            <button class="a11y-size-btn" data-size="3">18</button>
+        </div>
+    </div>
 
     <script src="app.js"></script>
 </body>
