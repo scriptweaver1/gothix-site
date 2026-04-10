@@ -393,16 +393,6 @@ body {
     transition: font-family var(--transition-speed) var(--transition-ease);
 }
 
-.card-source {
-    font-family: 'Unbounded', sans-serif; font-size: 0.6rem; font-weight: 700;
-    letter-spacing: 0.1em; text-transform: uppercase;
-    padding: 0.25rem 0.6rem; border-radius: var(--tag-radius);
-    white-space: nowrap; flex-shrink: 0;
-    transition: border-radius var(--transition-speed) var(--transition-ease);
-}
-.card-source.reddit { background: rgba(255, 69, 0, 0.15); color: #ff6a33; }
-.card-source.patreon { background: rgba(255, 66, 77, 0.15); color: #ff6a77; }
-
 .card-tags { display: flex; flex-wrap: wrap; gap: 0.4rem; }
 
 .card-tag {
@@ -412,29 +402,41 @@ body {
     border: 1px solid rgba(255, 255, 255, 0.1);
     transition: border-radius var(--transition-speed) var(--transition-ease), color 0.3s ease;
 }
-.card-tag.persona-gothix {
-    border-color: var(--color-gothic-red); color: var(--color-gothic-red);
-    background: rgba(196, 30, 58, 0.12);
-}
-.card-tag.persona-minxy {
-    border-color: var(--color-mynx-purple); color: var(--color-mynx-purple);
-    background: rgba(179, 136, 217, 0.14);
-}
 
 .card-meta { display: flex; align-items: center; gap: 0.75rem; font-size: 0.85rem; color: var(--text-secondary); }
 .card-meta span { display: flex; align-items: center; gap: 0.3rem; }
 
-.card-links { display: flex; gap: 0.6rem; margin-top: auto; padding-top: 0.5rem; }
+.card-links { display: flex; gap: 0.5rem; margin-top: auto; padding-top: 0.5rem; }
 
 .card-link {
-    display: inline-flex; align-items: center; gap: 0.35rem;
-    font-family: 'Unbounded', sans-serif; font-size: 0.72rem; font-weight: 600;
-    letter-spacing: 0.06em; text-transform: uppercase; text-decoration: none;
-    padding: 0.45rem 0.9rem; border-radius: var(--tag-radius);
-    border: 1px solid var(--border-color); color: var(--text-secondary);
+    display: inline-flex; align-items: center; justify-content: center;
+    width: 36px; height: 36px;
+    text-decoration: none; border-radius: 50%;
+    border: 1px solid rgba(255, 255, 255, 0.08);
     transition: all 0.25s ease;
 }
-.card-link:hover { border-color: var(--accent); color: var(--accent); background: var(--accent-glow); }
+
+.link-reddit {
+    color: rgba(255, 120, 50, 0.55);
+    background: rgba(255, 90, 0, 0.06);
+}
+.link-reddit:hover {
+    color: #ff6a33;
+    background: rgba(255, 90, 0, 0.15);
+    border-color: rgba(255, 90, 0, 0.3);
+    box-shadow: 0 0 12px rgba(255, 90, 0, 0.15);
+}
+
+.link-patreon {
+    color: rgba(255, 90, 90, 0.55);
+    background: rgba(255, 66, 77, 0.06);
+}
+.link-patreon:hover {
+    color: #ff6a77;
+    background: rgba(255, 66, 77, 0.15);
+    border-color: rgba(255, 66, 77, 0.3);
+    box-shadow: 0 0 12px rgba(255, 66, 77, 0.15);
+}
 
 /* ============================================
    EMPTY STATE & FOOTER
