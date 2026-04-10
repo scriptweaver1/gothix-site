@@ -49,34 +49,83 @@
     </header>
 
     <main class="main-content">
-        <section class="source-tabs">
-            <button class="tab active" data-source="all">All</button>
-            <button class="tab" data-source="reddit">Reddit</button>
-            <button class="tab" data-source="patreon">Patreon</button>
-        </section>
+        <button class="sidebar-toggle" id="sidebarToggle" aria-label="Toggle sidebar">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" width="20" height="20">
+                <line x1="3" y1="6" x2="21" y2="6"/><line x1="3" y1="12" x2="21" y2="12"/><line x1="3" y1="18" x2="21" y2="18"/>
+            </svg>
+        </button>
 
-        <section class="controls">
-            <div class="search-wrapper">
-                <svg class="search-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-                    <circle cx="11" cy="11" r="8"/><path d="M21 21l-4.35-4.35"/>
-                </svg>
-                <input type="text" id="searchInput" placeholder="Search audios..." class="search-input">
+        <aside class="sidebar" id="sidebar">
+            <div class="sidebar-section">
+                <h3 class="sidebar-heading">Categories</h3>
+                <div class="category-list" id="categoryList">
+                    <button class="category-btn active" data-category="all">All</button>
+                    <button class="category-btn" data-category="comfort">Comfort</button>
+                    <button class="category-btn" data-category="yandere">Yandere</button>
+                    <button class="category-btn" data-category="asmr">ASMR</button>
+                    <button class="category-btn" data-category="romance">Romance</button>
+                    <button class="category-btn" data-category="sleep-aid">Sleep Aid</button>
+                    <button class="category-btn" data-category="sci-fi">Sci-Fi</button>
+                </div>
             </div>
-            <div class="sort-wrapper">
-                <select id="sortSelect" class="sort-select">
-                    <option value="newest">Newest First</option>
-                    <option value="oldest">Oldest First</option>
-                    <option value="title">Title A–Z</option>
-                </select>
+
+            <div class="sidebar-section">
+                <h3 class="sidebar-heading">Source</h3>
+                <div class="category-list" id="sourceList">
+                    <button class="category-btn active" data-source="all">All</button>
+                    <button class="category-btn" data-source="reddit">Reddit</button>
+                    <button class="category-btn" data-source="patreon">Patreon</button>
+                </div>
             </div>
-        </section>
 
-        <section class="audio-grid" id="audioGrid">
-            <!-- Cards injected by JS -->
-        </section>
+            <div class="sidebar-divider"></div>
 
-        <div class="empty-state" id="emptyState" style="display:none;">
-            <p>No audios found ✦</p>
+            <div class="sidebar-section">
+                <h3 class="sidebar-heading">Display</h3>
+
+                <label class="sidebar-label">Text Size</label>
+                <div class="slider-row">
+                    <span class="slider-label-sm">A</span>
+                    <input type="range" id="textSizeSlider" class="styled-range" min="0" max="2" step="1" value="1">
+                    <span class="slider-label-lg">A</span>
+                </div>
+
+                <label class="sidebar-label">Cards Per Page</label>
+                <div class="cards-per-page" id="cardsPerPage">
+                    <button class="cpp-btn" data-count="6">6</button>
+                    <button class="cpp-btn active" data-count="12">12</button>
+                    <button class="cpp-btn" data-count="24">24</button>
+                    <button class="cpp-btn" data-count="all">All</button>
+                </div>
+            </div>
+        </aside>
+
+        <div class="content-area">
+            <section class="controls">
+                <div class="search-wrapper">
+                    <svg class="search-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                        <circle cx="11" cy="11" r="8"/><path d="M21 21l-4.35-4.35"/>
+                    </svg>
+                    <input type="text" id="searchInput" placeholder="Search audios..." class="search-input">
+                </div>
+                <div class="sort-wrapper">
+                    <select id="sortSelect" class="sort-select">
+                        <option value="newest">Newest First</option>
+                        <option value="oldest">Oldest First</option>
+                        <option value="title">Title A–Z</option>
+                    </select>
+                </div>
+            </section>
+
+            <section class="audio-grid" id="audioGrid">
+                <!-- Cards injected by JS -->
+            </section>
+
+            <div class="pagination" id="pagination"></div>
+
+            <div class="empty-state" id="emptyState" style="display:none;">
+                <p>No audios found ✦</p>
+            </div>
         </div>
     </main>
 
