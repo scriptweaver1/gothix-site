@@ -1,5 +1,5 @@
 <!DOCTYPE html>
-<html lang="en" data-persona="gothix">
+<html lang="en" data-persona="both">
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
@@ -18,28 +18,30 @@
     <header class="site-header">
         <div class="header-content">
             <h1 class="site-title">
-                <span class="title-gothix">Gothix</span>
-                <span class="title-separator">✦</span>
-                <span class="title-minxy">Minxy</span>
+                <span class="title-gothic">Gothic</span><span class="title-mynx">Mynx</span>
             </h1>
             <p class="site-subtitle">Audio Masterlist</p>
         </div>
 
-        <button class="persona-toggle" id="personaToggle" aria-label="Toggle persona">
-            <div class="toggle-track">
-                <div class="toggle-thumb">
-                    <svg class="toggle-icon icon-gothix" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-                        <path d="M12 2C6.5 2 2 6.5 2 12s4.5 10 10 10 10-4.5 10-10S17.5 2 12 2z"/>
-                        <path d="M12 2a7 7 0 0 0 0 20"/>
-                    </svg>
-                    <svg class="toggle-icon icon-minxy" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-                        <polygon points="12,2 15.09,8.26 22,9.27 17,14.14 18.18,21.02 12,17.77 5.82,21.02 7,14.14 2,9.27 8.91,8.26"/>
-                    </svg>
-                </div>
-                <span class="toggle-label toggle-label-gothix">Gothix</span>
-                <span class="toggle-label toggle-label-minxy">Minxy</span>
-            </div>
-        </button>
+        <div class="persona-switch" id="personaSwitch">
+            <button class="switch-option" data-persona="gothix">
+                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" width="16" height="16">
+                    <path d="M12 2C6.5 2 2 6.5 2 12s4.5 10 10 10 10-4.5 10-10S17.5 2 12 2z"/>
+                    <path d="M12 2a7 7 0 0 0 0 20"/>
+                </svg>
+                <span>Gothix</span>
+            </button>
+            <button class="switch-option active" data-persona="both">
+                <span>✦</span>
+            </button>
+            <button class="switch-option" data-persona="minxy">
+                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" width="16" height="16">
+                    <polygon points="12,2 15.09,8.26 22,9.27 17,14.14 18.18,21.02 12,17.77 5.82,21.02 7,14.14 2,9.27 8.91,8.26"/>
+                </svg>
+                <span>Minxy</span>
+            </button>
+            <div class="switch-indicator"></div>
+        </div>
     </header>
 
     <main class="main-content">
