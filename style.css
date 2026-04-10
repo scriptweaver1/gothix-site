@@ -406,12 +406,12 @@ body {
 .card-meta { display: flex; align-items: center; gap: 0.75rem; font-size: 0.85rem; color: var(--text-secondary); }
 .card-meta span { display: flex; align-items: center; gap: 0.3rem; }
 
-.card-links { display: flex; gap: 0.5rem; margin-top: auto; padding-top: 0.5rem; }
+.card-links { display: flex; gap: 0.6rem; margin-top: auto; padding-top: 0.75rem; justify-content: center; }
 
 .card-link {
     display: inline-flex; align-items: center; justify-content: center;
-    width: 36px; height: 36px;
-    text-decoration: none; border-radius: 50%;
+    width: 72px; height: 38px;
+    text-decoration: none; border-radius: 99px;
     border: 1px solid rgba(255, 255, 255, 0.08);
     transition: all 0.25s ease;
 }
