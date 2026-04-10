@@ -5,12 +5,10 @@
 const canvas = document.getElementById('starfield');
 const ctx = canvas.getContext('2d');
 let stars = [];
-let animFrame;
 
 function initStarfield() {
     canvas.width = window.innerWidth;
     canvas.height = window.innerHeight;
-
     const count = Math.floor((canvas.width * canvas.height) / 3500);
     stars = [];
     for (let i = 0; i < count; i++) {
@@ -27,48 +25,64 @@ function initStarfield() {
 
 function drawStars(time) {
     ctx.clearRect(0, 0, canvas.width, canvas.height);
-
-    const persona = document.documentElement.getAttribute('data-persona');
     const style = getComputedStyle(document.documentElement);
-    const starColorRaw = style.getPropertyValue('--star-color').trim();
+    const raw = style.getPropertyValue('--star-color').trim();
+    const m = raw.match(/rgba?\((\d+),\s*(\d+),\s*(\d+)/);
+    const [r, g, b] = m ? [m[1], m[2], m[3]] : [255, 200, 200];
 
-    // Parse rgba
-    const match = starColorRaw.match(/rgba?\((\d+),\s*(\d+),\s*(\d+)/);
-    const r = match ? match[1] : 255;
-    const g = match ? match[2] : 200;
-    const b = match ? match[3] : 200;
-
-    for (const star of stars) {
-        const twinkle = Math.sin(time * star.twinkleSpeed + star.twinkleOffset);
-        const alpha = star.baseAlpha + twinkle * 0.25;
-
+    for (const s of stars) {
+        const twinkle = Math.sin(time * s.twinkleSpeed + s.twinkleOffset);
+        const alpha = Math.max(0, s.baseAlpha + twinkle * 0.25);
         ctx.beginPath();
-        ctx.arc(star.x, star.y, star.radius, 0, Math.PI * 2);
-        ctx.fillStyle = `rgba(${r}, ${g}, ${b}, ${Math.max(0, alpha)})`;
+        ctx.arc(s.x, s.y, s.radius, 0, Math.PI * 2);
+        ctx.fillStyle = `rgba(${r}, ${g}, ${b}, ${alpha})`;
         ctx.fill();
     }
-
-    animFrame = requestAnimationFrame(drawStars);
+    requestAnimationFrame(drawStars);
 }
 
-window.addEventListener('resize', () => {
-    initStarfield();
-});
+window.addEventListener('resize', initStarfield);
 initStarfield();
 requestAnimationFrame(drawStars);
 
 
 /* ============================================
-   PERSONA TOGGLE
+   3-POSITION PERSONA SWITCH
    ============================================ */
 
-const toggle = document.getElementById('personaToggle');
+const switchEl = document.getElementById('personaSwitch');
+const options = switchEl.querySelectorAll('.switch-option');
+const indicator = switchEl.querySelector('.switch-indicator');
 
-toggle.addEventListener('click', () => {
-    const html = document.documentElement;
-    const current = html.getAttribute('data-persona');
-    const next = current === 'gothix' ? 'minxy' : 'gothix';
-    html.setAttribute('data-persona', next);
+function setPersona(persona) {
+    document.documentElement.setAttribute('data-persona', persona);
+
+    options.forEach(o => {
+        o.classList.toggle('active', o.dataset.persona === persona);
+    });
+
+    // Position the sliding indicator behind the active button
+    const activeBtn = switchEl.querySelector(`.switch-option[data-persona="${persona}"]`);
+    if (activeBtn) {
+        const switchRect = switchEl.getBoundingClientRect();
+        const btnRect = activeBtn.getBoundingClientRect();
+        indicator.style.left = (btnRect.left - switchRect.left) + 'px';
+        indicator.style.width = btnRect.width + 'px';
+    }
+
+    // Re-render cards since filter might change
+    update();
+}
+
+options.forEach(o => {
+    o.addEventListener('click', () => setPersona(o.dataset.persona));
+});
+
+// Initial position (need a frame for layout)
+requestAnimationFrame(() => setPersona('both'));
+window.addEventListener('resize', () => {
+    const current = document.documentElement.getAttribute('data-persona');
+    setPersona(current);
 });
 
 
@@ -172,11 +186,7 @@ let activeSource = 'all';
 
 function renderCards(audios) {
     grid.innerHTML = '';
-
-    if (audios.length === 0) {
-        emptyState.style.display = 'block';
-        return;
-    }
+    if (audios.length === 0) { emptyState.style.display = 'block'; return; }
     emptyState.style.display = 'none';
 
     audios.forEach((a, i) => {
@@ -184,36 +194,31 @@ function renderCards(audios) {
         card.className = 'audio-card';
         card.style.animationDelay = `${i * 0.06}s`;
 
-        const tagsHTML = a.tags.map(t => {
-            const isPersona = (t === 'Gothix' || t === 'Minxy');
-            return `<span class="card-tag${isPersona ? ' persona-tag' : ''}">${t}</span>`;
-        }).join('');
+        const tagsHTML = a.tags.map(t =>
+            `<span class="card-tag">${t}</span>`
+        ).join('');
 
-        // Build links
+        // Persona tag with correct color class
+        const personaClass = a.persona === 'Gothix' ? 'persona-gothix' : 'persona-minxy';
+        const personaTag = `<span class="card-tag ${personaClass}">${a.persona}</span>`;
+
         let linksHTML = '';
-        if (a.redditLink) {
-            linksHTML += `<a href="${a.redditLink}" target="_blank" class="card-link">▸ Reddit</a>`;
-        }
-        if (a.patreonLink) {
-            linksHTML += `<a href="${a.patreonLink}" target="_blank" class="card-link">▸ Patreon</a>`;
-        }
-        if (a.listenLink) {
-            linksHTML += `<a href="${a.listenLink}" target="_blank" class="card-link">▸ Listen</a>`;
-        }
+        if (a.redditLink) linksHTML += `<a href="${a.redditLink}" target="_blank" class="card-link">▸ Reddit</a>`;
+        if (a.patreonLink) linksHTML += `<a href="${a.patreonLink}" target="_blank" class="card-link">▸ Patreon</a>`;
+        if (a.listenLink) linksHTML += `<a href="${a.listenLink}" target="_blank" class="card-link">▸ Listen</a>`;
 
         card.innerHTML = `
             <div class="card-header">
                 <span class="card-title">${a.title}</span>
                 <span class="card-source ${a.source}">${a.source}</span>
             </div>
-            <div class="card-tags">${tagsHTML}</div>
+            <div class="card-tags">${personaTag}${tagsHTML}</div>
             <div class="card-meta">
                 <span>✦ ${a.date}</span>
                 <span>⏱ ${a.duration}</span>
             </div>
             <div class="card-links">${linksHTML}</div>
         `;
-
         grid.appendChild(card);
     });
 }
@@ -221,12 +226,20 @@ function renderCards(audios) {
 function getFilteredSorted() {
     let audios = [...SAMPLE_AUDIOS];
 
+    // Persona filter — gothix/minxy only show their side, "both" shows all
+    const persona = document.documentElement.getAttribute('data-persona');
+    if (persona === 'gothix') {
+        audios = audios.filter(a => a.persona === 'Gothix');
+    } else if (persona === 'minxy') {
+        audios = audios.filter(a => a.persona === 'Minxy');
+    }
+
     // Source filter
     if (activeSource !== 'all') {
         audios = audios.filter(a => a.source === activeSource);
     }
 
-    // Search filter
+    // Search
     const query = searchInput.value.toLowerCase().trim();
     if (query) {
         audios = audios.filter(a =>
@@ -237,13 +250,9 @@ function getFilteredSorted() {
 
     // Sort
     const sort = sortSelect.value;
-    if (sort === 'newest') {
-        audios.sort((a, b) => b.date.localeCompare(a.date));
-    } else if (sort === 'oldest') {
-        audios.sort((a, b) => a.date.localeCompare(b.date));
-    } else if (sort === 'title') {
-        audios.sort((a, b) => a.title.localeCompare(b.title));
-    }
+    if (sort === 'newest') audios.sort((a, b) => b.date.localeCompare(a.date));
+    else if (sort === 'oldest') audios.sort((a, b) => a.date.localeCompare(b.date));
+    else if (sort === 'title') audios.sort((a, b) => a.title.localeCompare(b.title));
 
     return audios;
 }
@@ -252,7 +261,6 @@ function update() {
     renderCards(getFilteredSorted());
 }
 
-// Event listeners
 searchInput.addEventListener('input', update);
 sortSelect.addEventListener('change', update);
 
@@ -264,6 +272,3 @@ document.querySelectorAll('.tab').forEach(tab => {
         update();
     });
 });
-
-// Initial render
-update();
