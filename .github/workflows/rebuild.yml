@@ -1,0 +1,43 @@
+name: Rebuild audios.json
+
+on:
+  schedule:
+    - cron: '0 */6 * * *'   # every 6 hours (UTC)
+  workflow_dispatch:          # adds a manual "Run workflow" button
+  push:
+    paths:
+      - build.py              # rebuild if the script itself changes
+
+permissions:
+  contents: write
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.12'
+
+      - name: Install dependencies
+        run: pip install requests
+
+      - name: Build audios.json from the published sheets
+        env:
+          REDDIT_CSV_URL: ${{ secrets.REDDIT_CSV_URL }}
+          PATREON_CSV_URL: ${{ secrets.PATREON_CSV_URL }}
+        run: python build.py
+
+      - name: Commit if the catalog changed
+        run: |
+          if ! git diff --quiet -- audios.json; then
+            git config user.name  "github-actions[bot]"
+            git config user.email "github-actions[bot]@users.noreply.github.com"
+            git add audios.json
+            git commit -m "Auto-rebuild audios.json"
+            git push
+          else
+            echo "No changes to audios.json."
+          fi
