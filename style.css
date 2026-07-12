@@ -659,3 +659,6 @@ body {
     .site-title { font-size: 2rem; }
     .switch-option { padding: 0.45rem 0.8rem; font-size: 0.6rem; }
 }
+
+/* Overflow tag indicator */
+.card-tag-more { opacity: 0.6; font-style: italic; }
