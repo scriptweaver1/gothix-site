@@ -447,3 +447,19 @@ document.querySelectorAll('.a11y-font-btn').forEach(btn => {
 
 // Kick everything off
 loadAudios();
+
+/* ============================================
+   CINEMATIC MODE
+   ============================================ */
+
+const cinematicToggle = document.getElementById('cinematicToggle');
+cinematicToggle.addEventListener('click', () => {
+    const on = document.body.classList.toggle('cinematic');
+    cinematicToggle.title = on ? 'Exit cinematic mode' : 'Cinematic mode';
+    cinematicToggle.setAttribute('aria-label', cinematicToggle.title);
+    // close the a11y menu if it was open
+    if (on) a11yMenu.classList.remove('open');
+});
+document.addEventListener('keydown', (e) => {
+    if (e.key === 'Escape') document.body.classList.remove('cinematic');
+});
