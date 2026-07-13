@@ -275,6 +275,135 @@ function update() {
     }, FADE_MS);
 }
 
+/* ============================================
+   SMART TAG SEARCH
+   Layer 1 — normalization: "Deep Throat", "Deep-Throat" and "Deepthroat"
+   all become "deepthroat", so spelling/punctuation never matters.
+   Layer 2 — concept groups: different words for the same idea (BJ ↔
+   Blowjob, Tits ↔ Breasts ↔ Boobs...) match each other. Groups are
+   built from the actual tag corpus used across the masterlist.
+   ============================================ */
+
+function normTag(s) {
+    return String(s || '').toLowerCase().replace(/[^a-z0-9]/g, '');
+}
+
+// Each group is a list of NORMALIZED terms that mean the same concept.
+const CONCEPT_GROUPS = [
+    ['bj', 'blowjob', 'cocksucking', 'suckingyourcock', 'glucks', 'sloppybj'],
+    ['hj', 'handjob', 'strokeit', 'fuckmyhand', 'reacharound'],
+    ['deepthroat', 'throatfuck', 'fuckmymouth', 'facefuck', 'gluck'],
+    ['cim', 'cuminmouth', 'cumswallow', 'swallowing', 'multipleswallows', 'fedcum', 'mouthfullocum'],
+    ['fdom', 'femdom', 'domme', 'mommydom', 'mommydomme', 'mistress', 'girlboss', 'dominating'],
+    ['fsub', 'submissive', 'subby', 'sublistener', 'usemе', 'useme'],
+    ['mdom', 'daddydom', 'daddy', 'master', 'sir'],
+    ['msub', 'sublistener', 'subbylistener'],
+    ['creampie', 'breed', 'breeding', 'breedme', 'cuminside', 'cuminmywomb', 'analcreampie'],
+    ['gfe', 'girlfriend', 'girlfriendexperience', 'needygf', 'lovinggf'],
+    ['bfe', 'boyfriend', 'boyfriendexperience'],
+    ['boobjob', 'breastjob', 'tittyfuck', 'titjob', 'titfuck', 'oiledboobjob'],
+    ['boobs', 'breasts', 'tits', 'titties', 'bigboobs', 'bigbreasts', 'bigtits', 'cleavage'],
+    ['ass', 'booty', 'bigass', 'butt'],
+    ['pegging', 'strapon', 'strapon', 'girlcock', 'girldick', 'doubleendeddildo'],
+    ['anal', 'assplay', 'buttplug', 'analplay', 'fingermyass'],
+    ['cnc', 'dubcon', 'noncon', 'rape', 'coercion', 'consensualnonconsent'],
+    ['freeuse', 'freeusе'],
+    ['joi', 'jill', 'guidedmasturbation', 'jerkoffinstructions', 'countdown'],
+    ['somno', 'somnophilia', 'sleepplay', 'whileasleep', 'somnooral'],
+    ['cunnilingus', 'pussyeating', 'eatingout', 'eatingher', 'goingdown', 'ridingyourface', 'facesitting', 'anilingus'],
+    ['edging', 'edge', 'orgasmcontrol', 'orgasmdenial', 'denial'],
+    ['overstim', 'overstimulation'],
+    ['lbomb', 'lbombs', 'lovebombs', 'iloveyou', 'l0x3'],
+    ['goodboy', 'goodboys', 'babyboy'],
+    ['goodgirl', 'goodgirls', 'babygirl'],
+    ['praise', 'praisekink', 'listenerpraise', 'bodypraise', 'appreciation', 'bodyappreciation', 'validation', 'encouragement'],
+    ['degradation', 'namecalling', 'mocking', 'condescending', 'humiliation'],
+    ['wetsounds', 'wetsound', 'wetnoises', 'slurping', 'slurps', 'sloppy'],
+    ['monstergirl', 'monstergirls', 'succubus', 'catgirl', 'puppygirl', 'bunnygirl', 'demon', 'imp'],
+    ['scent', 'sniff', 'sniffs', 'sniffing', 'smell', 'musk', 'scentfetish', 'scentplay', 'pussyscent'],
+    ['4thwallbreak', '4thwallbreaks', 'fourthwallbreak', 'fourthwall'],
+    ['improv', 'improvised', 'improvadded'],
+    ['scriptfill', 'script'],
+    ['ramblefap', 'ramble', 'rambles', 'fap', 'ramblefapinmyears'],
+    ['orgasm', 'orgasms', 'mutualo', 'listenero', 'speakero', 'multipleos', 'multipleorgasms', 'listenerorgasm', 'speakerorgasm', '2listenero', 'cumwithme', 'climax'],
+    ['precum', 'precumobsessed', 'precumobsession', 'precumtasting', 'precumfeeding', 'eatyourprecum'],
+    ['frenulum', 'frenulumworship', 'frenulumteasing', 'frenulumlicks', 'frenulumlove', 'frenulumobsessed'],
+    ['spit', 'spitting', 'spitaslube', 'drooling', 'drool'],
+    ['kissing', 'kisses', 'makingout', 'makeout', 'cumkiss', 'cumswapping'],
+    ['cuddles', 'cuddling', 'cuddle', 'cozy', 'snuggle', 'holding'],
+    ['sleepaid', 'sleep', 'goodnight', 'bedtime', 'putsyoutobed', 'fallingasleep'],
+    ['comfort', 'reassurance', 'mentalhealth', 'wholesome', 'aftercare', 'checkins', 'consentchecks'],
+    ['sfw', 'safeforwork', 'nonsexual'],
+    ['asmr', 'softspoken', 'whisper', 'whispers', 'whispering', 'pillowtalk'],
+    ['teasing', 'tease', 'playfulteasing', 'taunting'],
+    ['possessive', 'yandere', 'obsessive', 'jealous', 'youremine', 'youreminenow', 'stalker'],
+    ['exhibitionism', 'publicplay', 'semipublic', 'voyeur', 'voyeurism', 'almostcaught', 'holdthemoan'],
+    ['grinding', 'clitgrinding', 'cockgrinding', 'dryhumping', 'thighfucking', 'thighjob'],
+    ['fingering', 'fingersinmouth', 'fingermyass'],
+    ['dildo', 'dildos', 'vibrator', 'toy', 'toys', 'clitsucker'],
+    ['spanking', 'spanks', 'spank'],
+    ['bondage', 'restrained', 'cuffed', 'handcuffs', 'tiedup', 'blindfold'],
+    ['petplay', 'collar', 'leash', 'puppy', 'kitten', 'bunny'],
+    ['marking', 'hickies', 'hickeys', 'biting', 'neckplay', 'necknibbles'],
+    ['cowgirl', 'riding', 'ridemе', 'rideme'],
+    ['virgin', 'firsttime', 'inexperienced'],
+    ['milf', 'mommy', 'mature'],
+    ['collab', 'collaboration', 'featuring', 'duo', 'threesome', 'mmf', 'ffm', '3some'],
+    ['scifi', 'sciencefiction', 'starwars', 'cyberpunk', 'space', 'alien', 'robot', 'android', 'vr'],
+    ['fantasy', 'magic', 'mythology', 'dnd', 'rpg', 'warhammer', 'elf', 'witch'],
+];
+
+// term -> set of group indices (a term can appear in several groups)
+const TERM_INDEX = new Map();
+CONCEPT_GROUPS.forEach((terms, gi) => {
+    terms.forEach(t => {
+        if (!TERM_INDEX.has(t)) TERM_INDEX.set(t, new Set());
+        TERM_INDEX.get(t).add(gi);
+    });
+});
+
+// Which concept groups does a normalized string belong to?
+function conceptsOf(norm) {
+    const out = new Set();
+    if (!norm) return out;
+    for (const [term, groups] of TERM_INDEX) {
+        // tag contains the term, or (for queries) the term starts with the query
+        if (norm.includes(term) || (norm.length >= 3 && term.startsWith(norm))) {
+            groups.forEach(g => out.add(g));
+        }
+    }
+    return out;
+}
+
+// Does one search token match an audio? (uses precomputed norms)
+function tokenMatches(audio, token) {
+    const nq = normTag(token);
+    if (!nq) return true;
+    // plain text match on title/synopsis
+    if ((audio.title || '').toLowerCase().includes(token)) return true;
+    if ((audio.synopsis || '').toLowerCase().includes(token)) return true;
+    // normalized substring match on tags (Deep-Throat vs Deepthroat etc.)
+    if (audio._normTags.some(nt => nt.includes(nq))) return true;
+    // concept-group match (BJ vs Blowjob etc.)
+    const qGroups = conceptsOf(nq);
+    if (qGroups.size) {
+        for (const g of audio._tagGroups) if (qGroups.has(g)) return true;
+    }
+    return false;
+}
+
+// Precompute per-audio normalized tags + concept groups (called once after load)
+function indexAudios() {
+    AUDIOS.forEach(a => {
+        a._normTags = (a.tags || []).map(normTag);
+        const groups = new Set();
+        a._normTags.forEach(nt => conceptsOf(nt).forEach(g => groups.add(g)));
+        // category counts as a searchable concept too
+        conceptsOf(normTag(a.category)).forEach(g => groups.add(g));
+        a._tagGroups = groups;
+    });
+}
+
 function getFilteredSorted() {
     let audios = [...AUDIOS];
 
@@ -290,11 +419,13 @@ function getFilteredSorted() {
 
     const query = searchInput.value.toLowerCase().trim();
     if (query) {
-        audios = audios.filter(a =>
-            (a.title || '').toLowerCase().includes(query) ||
-            (a.synopsis || '').toLowerCase().includes(query) ||
-            (a.tags || []).some(t => t.toLowerCase().includes(query))
-        );
+        // Try the whole query as one phrase first (handles "deep throat"),
+        // otherwise every word must match somewhere (handles "succubus creampie").
+        audios = audios.filter(a => {
+            if (tokenMatches(a, query)) return true;
+            const words = query.split(/\s+/).filter(w => w.length > 1);
+            return words.length > 1 && words.every(w => tokenMatches(a, w));
+        });
     }
 
     const sort = sortSelect.value;
