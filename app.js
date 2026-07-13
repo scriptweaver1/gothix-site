@@ -549,6 +549,14 @@ sortSelect.addEventListener('change', update);
 //  - clicking a tag fills the search box (smart matching kicks in)
 //  - the "+N more" button reveals/hides the rest of that card's tags
 grid.addEventListener('click', (e) => {
+    // Source buttons: open via window.open (dynamically-created target=_blank
+    // links are unreliable on mobile/iOS Chrome)
+    const link = e.target.closest('.card-link, a.credit-value');
+    if (link && link.href) {
+        e.preventDefault();
+        window.open(link.href, '_blank', 'noopener');
+        return;
+    }
     const toggle = e.target.closest('[data-action="toggle-tags"]');
     if (toggle) {
         const wrap = toggle.closest('.card-tags');
