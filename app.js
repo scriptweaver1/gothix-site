@@ -583,7 +583,10 @@ document.querySelectorAll('.cpr-btn').forEach(btn => {
         update();
     });
 });
-grid.classList.add('cols-2');
+// Default layout: 1 column on phones, 2 on larger screens (all still selectable)
+const initCols = window.matchMedia('(max-width: 600px)').matches ? '1' : '2';
+grid.className = 'audio-grid cols-' + initCols;
+document.querySelectorAll('.cpr-btn').forEach(b => b.classList.toggle('active', b.dataset.cols === initCols));
 
 // Accessibility widget
 const a11yToggle = document.getElementById('a11yToggle');
