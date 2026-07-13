@@ -389,11 +389,20 @@ body {
     max-height: 42vh;
     overflow-y: auto;
     padding-right: 4px;
+}
+
+/* Themed slim scrollbar, shared by the sidebar panel and the category list */
+.sidebar, #categoryList {
     scrollbar-width: thin;
     scrollbar-color: var(--border-hover) transparent;
 }
+.sidebar::-webkit-scrollbar,
 #categoryList::-webkit-scrollbar { width: 6px; }
+.sidebar::-webkit-scrollbar-thumb,
 #categoryList::-webkit-scrollbar-thumb { background: var(--border-hover); border-radius: 3px; }
+.sidebar::-webkit-scrollbar-thumb:hover,
+#categoryList::-webkit-scrollbar-thumb:hover { background: var(--accent); }
+.sidebar::-webkit-scrollbar-track,
 #categoryList::-webkit-scrollbar-track { background: transparent; }
 
 .category-btn {
