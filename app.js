@@ -116,7 +116,7 @@ let AUDIOS = [];
 let activeSource = 'all';
 let activeCategory = 'all';
 const TEXT_SIZES = ['text-size-12', 'text-size-14', 'text-size-16', 'text-size-18'];
-const MAX_TAGS_SHOWN = 10;
+const MAX_TAGS_SHOWN = 6;
 
 
 /* ============================================
@@ -137,12 +137,28 @@ function escapeHtml(str) {
         .replace(/"/g, '&quot;').replace(/'/g, '&#39;');
 }
 
+function redditUserLinks(value) {
+    // A field may hold one or several usernames (comma / & / "and" separated).
+    const parts = String(value).split(/\s*(?:,|&|\band\b)\s*/i).filter(Boolean);
+    return parts.map(raw => {
+        const name = raw.trim().replace(/^\/?u\//i, '').trim(); // strip u/ or /u/
+        if (/^[A-Za-z0-9_-]{3,20}$/.test(name)) {
+            return `<a class="credit-value" href="https://www.reddit.com/user/${encodeURIComponent(name)}" target="_blank" rel="noopener">u/${escapeHtml(name)}</a>`;
+        }
+        return `<span class="credit-value">${escapeHtml(raw.trim())}</span>`;
+    }).join(', ');
+}
+
 function buildCardInner(a) {
     const tags = a.tags || [];
-    const shown = tags.slice(0, MAX_TAGS_SHOWN);
-    const extra = tags.length - shown.length;
-    let tagsHTML = shown.map(t => `<span class="card-tag">${escapeHtml(t)}</span>`).join('');
-    if (extra > 0) tagsHTML += `<span class="card-tag card-tag-more">+${extra}</span>`;
+    const tagSpan = (t, hidden) =>
+        `<button type="button" class="card-tag${hidden ? ' card-tag-hidden' : ''}" data-tag="${escapeHtml(t)}">${escapeHtml(t)}</button>`;
+    let tagsHTML = tags.slice(0, MAX_TAGS_SHOWN).map(t => tagSpan(t, false)).join('');
+    const extra = tags.length - MAX_TAGS_SHOWN;
+    if (extra > 0) {
+        tagsHTML += tags.slice(MAX_TAGS_SHOWN).map(t => tagSpan(t, true)).join('');
+        tagsHTML += `<button type="button" class="card-tag card-tag-toggle" data-action="toggle-tags" data-more="${extra}">+${extra} more</button>`;
+    }
 
     // Category badge
     const categoryHTML = a.category
@@ -152,19 +168,19 @@ function buildCardInner(a) {
     const synopsisHTML = a.synopsis
         ? `<p class="card-synopsis">${escapeHtml(a.synopsis)}</p>` : '';
 
-    // Credits: writer, script, collab, editor
+    // Credits: writer, script, collab, editor (usernames link to Reddit)
     const credits = [];
     if (a.writer) {
-        credits.push(`<div class="credit-row"><span class="credit-label">Writer</span><span class="credit-value">${escapeHtml(a.writer)}</span></div>`);
+        credits.push(`<div class="credit-row"><span class="credit-label">Writer</span><span class="credit-value">${redditUserLinks(a.writer)}</span></div>`);
     }
     if (a.scriptLink) {
         credits.push(`<div class="credit-row"><span class="credit-label">Script</span><a class="credit-value" href="${escapeHtml(a.scriptLink)}" target="_blank" rel="noopener">View script</a></div>`);
     }
     if (a.collabPartner) {
-        credits.push(`<div class="credit-row"><span class="credit-label">Collab</span><span class="credit-value">${escapeHtml(a.collabPartner)}</span></div>`);
+        credits.push(`<div class="credit-row"><span class="credit-label">Collab</span><span class="credit-value">${redditUserLinks(a.collabPartner)}</span></div>`);
     }
     if (a.editor) {
-        credits.push(`<div class="credit-row"><span class="credit-label">Editor</span><span class="credit-value">${escapeHtml(a.editor)}</span></div>`);
+        credits.push(`<div class="credit-row"><span class="credit-label">Editor</span><span class="credit-value">${redditUserLinks(a.editor)}</span></div>`);
     }
     const creditsHTML = credits.length ? `<div class="card-credits">${credits.join('')}</div>` : '';
 
@@ -528,6 +544,25 @@ async function loadAudios() {
 
 searchInput.addEventListener('input', update);
 sortSelect.addEventListener('change', update);
+
+// Card interactions (delegated, since cards are rebuilt on every filter):
+//  - clicking a tag fills the search box (smart matching kicks in)
+//  - the "+N more" button reveals/hides the rest of that card's tags
+grid.addEventListener('click', (e) => {
+    const toggle = e.target.closest('[data-action="toggle-tags"]');
+    if (toggle) {
+        const wrap = toggle.closest('.card-tags');
+        const expanded = wrap.classList.toggle('expanded');
+        toggle.textContent = expanded ? 'Show less' : `+${toggle.dataset.more} more`;
+        return;
+    }
+    const tagBtn = e.target.closest('.card-tag[data-tag]');
+    if (tagBtn) {
+        searchInput.value = tagBtn.dataset.tag;
+        update();
+        window.scrollTo({ top: 0, behavior: 'smooth' });
+    }
+});
 
 // Source buttons (sidebar)
 document.querySelectorAll('#sourceList .category-btn').forEach(btn => {
