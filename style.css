@@ -592,11 +592,36 @@ body {
 .card-tags { display: flex; flex-wrap: wrap; gap: 0.4rem; }
 
 .card-tag {
-    font-family: var(--font-body); font-size: 0.75rem;
+    font-family: var(--font-body); font-size: 0.75rem; line-height: 1.2;
     padding: 0.2rem 0.6rem; border-radius: var(--tag-radius);
     background: rgba(255, 255, 255, 0.07); color: var(--text-secondary);
     border: 1px solid rgba(255, 255, 255, 0.1);
-    transition: border-radius var(--transition-speed) var(--transition-ease), color 0.3s ease;
+    cursor: pointer;
+    transition: border-radius var(--transition-speed) var(--transition-ease),
+                color 0.2s ease, background 0.2s ease, border-color 0.2s ease;
+}
+.card-tag:hover {
+    color: var(--accent);
+    border-color: var(--border-hover);
+    background: var(--accent-glow);
+}
+
+/* Overflow tags stay hidden until the card is expanded */
+.card-tag-hidden { display: none; }
+.card-tags.expanded .card-tag-hidden { display: inline-block; }
+
+/* The reveal / collapse control */
+.card-tag-toggle {
+    font-family: var(--font-title); font-size: 0.66rem; font-weight: 400;
+    letter-spacing: 0.04em; text-transform: uppercase;
+    color: var(--accent);
+    background: transparent;
+    border: 1px dashed var(--border-hover);
+}
+.card-tag-toggle:hover {
+    color: var(--accent);
+    background: var(--accent-glow);
+    border-style: solid;
 }
 
 .card-meta { display: flex; align-items: center; gap: 0.75rem; font-size: 0.85rem; color: var(--text-secondary); }
@@ -751,7 +776,6 @@ body.font-opendyslexic, body.font-arial, body.font-atkinson { --font-display: va
 }
 
 /* Overflow tag indicator */
-.card-tag-more { opacity: 0.6; font-style: italic; }
 
 /* ============================================
    CINEMATIC MODE
