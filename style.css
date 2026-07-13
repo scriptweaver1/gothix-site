@@ -752,3 +752,50 @@ body.font-opendyslexic, body.font-arial, body.font-atkinson { --font-display: va
 
 /* Overflow tag indicator */
 .card-tag-more { opacity: 0.6; font-style: italic; }
+
+/* ============================================
+   CINEMATIC MODE
+   ============================================ */
+
+.cinematic-toggle {
+    position: fixed; top: 1.5rem; right: 1.5rem; z-index: 100;
+    width: 46px; height: 46px; border-radius: 50%;
+    background: var(--bg-secondary); border: 1px solid var(--border-color);
+    color: var(--text-secondary); cursor: pointer;
+    display: flex; align-items: center; justify-content: center;
+    box-shadow: 0 4px 16px rgba(0, 0, 0, 0.4);
+    transition: color 0.3s ease, border-color 0.3s ease, background 0.6s ease,
+                opacity 0.6s ease, box-shadow 0.6s ease;
+    -webkit-tap-highlight-color: transparent;
+}
+.cinematic-toggle:hover { color: var(--accent); border-color: var(--accent); }
+
+.cinematic-toggle .icon-off { display: none; }
+body.cinematic .cinematic-toggle .icon-on { display: none; }
+body.cinematic .cinematic-toggle .icon-off { display: block; }
+
+/* Fade everything except the background + ship + this button */
+.site-header,
+.main-content,
+.site-footer,
+.a11y-widget,
+.sidebar-toggle {
+    transition: opacity 0.8s ease;
+}
+body.cinematic .site-header,
+body.cinematic .main-content,
+body.cinematic .site-footer,
+body.cinematic .a11y-widget,
+body.cinematic .sidebar-toggle {
+    opacity: 0;
+    pointer-events: none;
+}
+
+/* Keep the toggle reachable but unobtrusive while immersed */
+body.cinematic .cinematic-toggle {
+    opacity: 0.3;
+    background: transparent;
+    border-color: transparent;
+    box-shadow: none;
+}
+body.cinematic .cinematic-toggle:hover { opacity: 1; }
