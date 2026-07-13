@@ -20,7 +20,7 @@
        if it ever flies tail-first, change +1 to -1.
        FACE_TILT turns it slightly toward the camera so you see front + side
        instead of a flat broadside. */
-    const NOSE_SIGN   = 1;      // +1 or -1 if it flies backwards
+    const NOSE_SIGN   = -1;      // +1 or -1 if it flies backwards
     const FACE_TILT   = 0.55;   // radians (~31 deg) toward camera for a 3/4 view
     const BASE_PITCH  = 0.05;   // slight nose tilt up/down
     const VARY_TILT   = 0.18;   // per-pass variety in the 3/4 angle
