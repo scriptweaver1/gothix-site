@@ -295,7 +295,7 @@ const CONCEPT_GROUPS = [
     ['deepthroat', 'throatfuck', 'fuckmymouth', 'facefuck', 'gluck'],
     ['cim', 'cuminmouth', 'cumswallow', 'swallowing', 'multipleswallows', 'fedcum', 'mouthfullocum'],
     ['fdom', 'femdom', 'domme', 'mommydom', 'mommydomme', 'mistress', 'girlboss', 'dominating'],
-    ['fsub', 'submissive', 'subby', 'sublistener', 'usemе', 'useme'],
+    ['fsub', 'submissive', 'subby', 'sublistener', 'useme'],
     ['mdom', 'daddydom', 'daddy', 'master', 'sir'],
     ['msub', 'sublistener', 'subbylistener'],
     ['creampie', 'breed', 'breeding', 'breedme', 'cuminside', 'cuminmywomb', 'analcreampie'],
@@ -304,10 +304,10 @@ const CONCEPT_GROUPS = [
     ['boobjob', 'breastjob', 'tittyfuck', 'titjob', 'titfuck', 'oiledboobjob'],
     ['boobs', 'breasts', 'tits', 'titties', 'bigboobs', 'bigbreasts', 'bigtits', 'cleavage'],
     ['ass', 'booty', 'bigass', 'butt'],
-    ['pegging', 'strapon', 'strapon', 'girlcock', 'girldick', 'doubleendeddildo'],
+    ['pegging', 'strapon', 'girlcock', 'girldick', 'doubleendeddildo'],
     ['anal', 'assplay', 'buttplug', 'analplay', 'fingermyass'],
     ['cnc', 'dubcon', 'noncon', 'rape', 'coercion', 'consensualnonconsent'],
-    ['freeuse', 'freeusе'],
+    ['freeuse'],
     ['joi', 'jill', 'guidedmasturbation', 'jerkoffinstructions', 'countdown'],
     ['somno', 'somnophilia', 'sleepplay', 'whileasleep', 'somnooral'],
     ['cunnilingus', 'pussyeating', 'eatingout', 'eatingher', 'goingdown', 'ridingyourface', 'facesitting', 'anilingus'],
@@ -319,7 +319,7 @@ const CONCEPT_GROUPS = [
     ['praise', 'praisekink', 'listenerpraise', 'bodypraise', 'appreciation', 'bodyappreciation', 'validation', 'encouragement'],
     ['degradation', 'namecalling', 'mocking', 'condescending', 'humiliation'],
     ['wetsounds', 'wetsound', 'wetnoises', 'slurping', 'slurps', 'sloppy'],
-    ['monstergirl', 'monstergirls', 'succubus', 'catgirl', 'puppygirl', 'bunnygirl', 'demon', 'imp'],
+    ['monstergirl', 'monstergirls', 'succubus', 'catgirl', 'puppygirl', 'bunnygirl', 'demon', 'impgirl'],
     ['scent', 'sniff', 'sniffs', 'sniffing', 'smell', 'musk', 'scentfetish', 'scentplay', 'pussyscent'],
     ['4thwallbreak', '4thwallbreaks', 'fourthwallbreak', 'fourthwall'],
     ['improv', 'improvised', 'improvadded'],
@@ -345,7 +345,7 @@ const CONCEPT_GROUPS = [
     ['bondage', 'restrained', 'cuffed', 'handcuffs', 'tiedup', 'blindfold'],
     ['petplay', 'collar', 'leash', 'puppy', 'kitten', 'bunny'],
     ['marking', 'hickies', 'hickeys', 'biting', 'neckplay', 'necknibbles'],
-    ['cowgirl', 'riding', 'ridemе', 'rideme'],
+    ['cowgirl', 'riding', 'rideme'],
     ['virgin', 'firsttime', 'inexperienced'],
     ['milf', 'mommy', 'mature'],
     ['collab', 'collaboration', 'featuring', 'duo', 'threesome', 'mmf', 'ffm', '3some'],
@@ -362,15 +362,23 @@ CONCEPT_GROUPS.forEach((terms, gi) => {
     });
 });
 
+// Terms too ambiguous for substring matching ("mdom" is inside "feMDOM",
+// "ass" is inside "pASSionate"...) — these only match as the whole tag/query.
+const EXACT_ONLY = new Set(['mdom', 'msub', 'ass', 'sir', 'edge', 'toy', 'fap', 'sub']);
+
 // Which concept groups does a normalized string belong to?
 function conceptsOf(norm) {
     const out = new Set();
     if (!norm) return out;
     for (const [term, groups] of TERM_INDEX) {
-        // tag contains the term, or (for queries) the term starts with the query
-        if (norm.includes(term) || (norm.length >= 3 && term.startsWith(norm))) {
-            groups.forEach(g => out.add(g));
+        let hit;
+        if (EXACT_ONLY.has(term)) {
+            hit = (norm === term);
+        } else {
+            // tag contains the term, or (for queries) the term starts with the query
+            hit = norm.includes(term) || (norm.length >= 3 && term.startsWith(norm));
         }
+        if (hit) groups.forEach(g => out.add(g));
     }
     return out;
 }
@@ -419,12 +427,18 @@ function getFilteredSorted() {
 
     const query = searchInput.value.toLowerCase().trim();
     if (query) {
-        // Try the whole query as one phrase first (handles "deep throat"),
-        // otherwise every word must match somewhere (handles "succubus creampie").
+        const words = query.split(/\s+/).filter(w => w.length > 1);
         audios = audios.filter(a => {
-            if (tokenMatches(a, query)) return true;
-            const words = query.split(/\s+/).filter(w => w.length > 1);
-            return words.length > 1 && words.every(w => tokenMatches(a, w));
+            // single word (or one meaningful token): full smart match
+            if (words.length <= 1) return tokenMatches(a, query);
+            // multi-word: exact phrase in text...
+            if ((a.title || '').toLowerCase().includes(query)) return true;
+            if ((a.synopsis || '').toLowerCase().includes(query)) return true;
+            // ...normalized phrase against tags ("deep throat" -> "deepthroat")...
+            const nq = normTag(query);
+            if (a._normTags.some(nt => nt.includes(nq))) return true;
+            // ...otherwise every word must match on its own (true AND)
+            return words.every(w => tokenMatches(a, w));
         });
     }
 
@@ -496,6 +510,7 @@ async function loadAudios() {
         const resp = await fetch(`audios.json?v=${Date.now()}`, { cache: 'no-store' });
         if (!resp.ok) throw new Error(`HTTP ${resp.status}`);
         AUDIOS = await resp.json();
+        indexAudios();
     } catch (e) {
         console.error('Could not load audios.json:', e);
         AUDIOS = [];
