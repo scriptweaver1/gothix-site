@@ -15,6 +15,18 @@
     const TARGET_FPS   = 30;    // cap: the drift is slow, 30 is plenty
     const FRAME_MS     = 1000 / TARGET_FPS;
 
+    /* ---- Hero orientation (keeps the ship upright, front & sides to camera) ----
+       If a pass ever settles showing the BACK or a flat SIDE, rotate the whole
+       thing by adjusting BASE_YAW: +/-1.57 = 90 degrees, 3.14 = 180 degrees. */
+    const BASE_YAW    = 0.0;    // left/right facing  (main knob for "show the front")
+    const BASE_PITCH  = 0.05;   // slight nose tilt
+    const BASE_ROLL   = 0.0;    // keep level (0 = never banked)
+    const VARY_YAW    = 0.30;   // +/- ~17 deg of per-pass variety
+    const VARY_PITCH  = 0.10;
+    const VARY_ROLL   = 0.05;
+    const SWAY_AMP    = 0.06;   // gentle bob amplitude (~3.5 deg)
+    const SWAY_SPEED  = 0.12;   // slow
+
     // --- Renderer (transparent, lightweight) ---
     const renderer = new THREE.WebGLRenderer({
         alpha: true, antialias: true, powerPreference: 'low-power',
@@ -76,7 +88,8 @@
     // --- Journey state ---
     let ship = null;
     const journey = { start: new THREE.Vector3(), end: new THREE.Vector3(), depth: 12,
-                      duration: 180, elapsed: 0, spin: new THREE.Vector3() };
+                      duration: 180, elapsed: 0,
+                      baseRot: new THREE.Vector3(), swayPhase: 0 };
 
     function frameHalfExtents(depth) {
         const halfH = Math.tan((FOV * Math.PI / 180) / 2) * depth;
@@ -104,11 +117,18 @@
         firstJourney = false;
         journey.start.set(perp.x * off - dir.x * R, perp.y * off - dir.y * R, -depth);
         journey.end.set(  perp.x * off + dir.x * R, perp.y * off + dir.y * R, -depth);
-        journey.spin.set((Math.random() - 0.5) * 0.02, (Math.random() - 0.5) * 0.04, (Math.random() - 0.5) * 0.01);
+
+        // Stable hero orientation: base angle + small per-pass variation. No tumbling.
+        journey.baseRot.set(
+            BASE_PITCH + (Math.random() * 2 - 1) * VARY_PITCH,
+            BASE_YAW   + (Math.random() * 2 - 1) * VARY_YAW,
+            BASE_ROLL  + (Math.random() * 2 - 1) * VARY_ROLL
+        );
+        journey.swayPhase = Math.random() * Math.PI * 2;
 
         if (ship) {
             ship.position.copy(journey.start);
-            ship.rotation.set(Math.random() * Math.PI * 2, Math.random() * Math.PI * 2, Math.random() * Math.PI * 2);
+            ship.rotation.set(journey.baseRot.x, journey.baseRot.y, journey.baseRot.z);
         }
     }
 
@@ -148,9 +168,11 @@
             // gentle ease so entry/exit aren't abrupt
             const e = t * t * (3 - 2 * t);
             ship.position.lerpVectors(journey.start, journey.end, e);
-            ship.rotation.x += journey.spin.x * (dt / 1000);
-            ship.rotation.y += journey.spin.y * (dt / 1000);
-            ship.rotation.z += journey.spin.z * (dt / 1000);
+            // gentle sway around the hero orientation — never tumbles
+            const ph = journey.swayPhase + journey.elapsed * SWAY_SPEED;
+            ship.rotation.x = journey.baseRot.x + Math.sin(ph)        * SWAY_AMP;
+            ship.rotation.y = journey.baseRot.y + Math.sin(ph * 0.7)  * SWAY_AMP;
+            ship.rotation.z = journey.baseRot.z + Math.sin(ph * 0.5)  * SWAY_AMP * 0.5;
         }
         renderer.render(scene, camera);
     }
