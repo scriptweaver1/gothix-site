@@ -565,10 +565,10 @@ body {
     /* Off-screen cards skip painting entirely — the big win with a long list */
     content-visibility: auto;
     contain-intrinsic-size: auto 360px;
-    /* box-shadow/transform stay snappy (0.25s) for hover; the gradient morph
-       rides the persona speed but now only repaints on-screen cards */
-    transition: background var(--transition-speed) var(--transition-ease),
-                border-radius var(--transition-speed) var(--transition-ease),
+    /* The metallic gradient + card bg SNAP on theme change (animating a
+       multi-stop gradient across every card was the source of the lag).
+       border-radius still morphs; shadow/transform stay snappy for hover. */
+    transition: border-radius var(--transition-speed) var(--transition-ease),
                 box-shadow 0.25s ease,
                 transform 0.25s ease,
                 opacity 0.35s ease;
@@ -624,8 +624,9 @@ body {
     background: rgba(255, 255, 255, 0.07); color: var(--text-secondary);
     border: 1px solid rgba(255, 255, 255, 0.1);
     cursor: pointer;
-    transition: border-radius var(--transition-speed) var(--transition-ease),
-                color 0.2s ease, background 0.2s ease, border-color 0.2s ease;
+    /* only hover props animate; border-radius snaps on theme change (there can
+       be 1000+ tags on screen — animating them all was costly) */
+    transition: color 0.2s ease, background 0.2s ease, border-color 0.2s ease;
 }
 .card-tag:hover {
     color: var(--accent);
