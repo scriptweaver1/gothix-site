@@ -5,6 +5,13 @@
 const canvas = document.getElementById('starfield');
 const ctx = canvas.getContext('2d');
 let stars = [];
+let starRGB = [255, 200, 200]; // cached; refreshed only on persona change
+
+function refreshStarColor() {
+    const raw = getComputedStyle(document.documentElement).getPropertyValue('--star-color').trim();
+    const m = raw.match(/rgba?\((\d+),\s*(\d+),\s*(\d+)/);
+    if (m) starRGB = [m[1], m[2], m[3]];
+}
 
 function initStarfield() {
     canvas.width = window.innerWidth;
@@ -25,10 +32,7 @@ function initStarfield() {
 
 function drawStars(time) {
     ctx.clearRect(0, 0, canvas.width, canvas.height);
-    const style = getComputedStyle(document.documentElement);
-    const raw = style.getPropertyValue('--star-color').trim();
-    const m = raw.match(/rgba?\((\d+),\s*(\d+),\s*(\d+)/);
-    const [r, g, b] = m ? [m[1], m[2], m[3]] : [255, 200, 200];
+    const [r, g, b] = starRGB;
 
     for (const s of stars) {
         const twinkle = Math.sin(time * s.twinkleSpeed + s.twinkleOffset);
@@ -43,6 +47,7 @@ function drawStars(time) {
 
 window.addEventListener('resize', initStarfield);
 initStarfield();
+refreshStarColor();
 requestAnimationFrame(drawStars);
 
 
@@ -57,6 +62,7 @@ const indicator = switchEl.querySelector('.switch-indicator');
 function setPersona(persona) {
     document.documentElement.setAttribute('data-persona', persona);
     personaOptions.forEach(o => o.classList.toggle('active', o.dataset.persona === persona));
+    refreshStarColor();
 
     const activeBtn = switchEl.querySelector(`.switch-option[data-persona="${persona}"]`);
     if (activeBtn) {
@@ -138,20 +144,49 @@ function buildCardInner(a) {
     let tagsHTML = shown.map(t => `<span class="card-tag">${escapeHtml(t)}</span>`).join('');
     if (extra > 0) tagsHTML += `<span class="card-tag card-tag-more">+${extra}</span>`;
 
+    // Category badge
+    const categoryHTML = a.category
+        ? `<div class="card-category">${escapeHtml(a.category)}</div>` : '';
+
+    // Synopsis / description
+    const synopsisHTML = a.synopsis
+        ? `<p class="card-synopsis">${escapeHtml(a.synopsis)}</p>` : '';
+
+    // Credits: writer, script, collab, editor
+    const credits = [];
+    if (a.writer) {
+        credits.push(`<div class="credit-row"><span class="credit-label">Writer</span><span class="credit-value">${escapeHtml(a.writer)}</span></div>`);
+    }
+    if (a.scriptLink) {
+        credits.push(`<div class="credit-row"><span class="credit-label">Script</span><a class="credit-value" href="${escapeHtml(a.scriptLink)}" target="_blank" rel="noopener">View script</a></div>`);
+    }
+    if (a.collabPartner) {
+        credits.push(`<div class="credit-row"><span class="credit-label">Collab</span><span class="credit-value">${escapeHtml(a.collabPartner)}</span></div>`);
+    }
+    if (a.editor) {
+        credits.push(`<div class="credit-row"><span class="credit-label">Editor</span><span class="credit-value">${escapeHtml(a.editor)}</span></div>`);
+    }
+    const creditsHTML = credits.length ? `<div class="card-credits">${credits.join('')}</div>` : '';
+
+    // Source buttons with icon + label
     let linksHTML = '';
-    if (a.redditLink) linksHTML += `<a href="${escapeHtml(a.redditLink)}" target="_blank" rel="noopener" class="card-link link-reddit" title="View on Reddit">${redditIcon}</a>`;
-    if (a.patreonLink) linksHTML += `<a href="${escapeHtml(a.patreonLink)}" target="_blank" rel="noopener" class="card-link link-patreon" title="View on Patreon">${patreonIcon}</a>`;
+    if (a.redditLink) linksHTML += `<a href="${escapeHtml(a.redditLink)}" target="_blank" rel="noopener" class="card-link link-reddit" title="View on Reddit">${redditIcon}<span>Reddit</span></a>`;
+    if (a.patreonLink) linksHTML += `<a href="${escapeHtml(a.patreonLink)}" target="_blank" rel="noopener" class="card-link link-patreon" title="View on Patreon">${patreonIcon}<span>Patreon</span></a>`;
 
     const meta = [];
     if (a.date) meta.push(`<span>✦ ${escapeHtml(a.date)}</span>`);
     if (a.duration) meta.push(`<span>⏱ ${escapeHtml(a.duration)}</span>`);
+    const metaHTML = meta.length ? `<div class="card-meta">${meta.join('')}</div>` : '';
 
     return `
+        ${categoryHTML}
         <div class="card-header">
             <span class="card-title">${escapeHtml(a.title)}</span>
         </div>
+        ${synopsisHTML}
         <div class="card-tags">${tagsHTML}</div>
-        <div class="card-meta">${meta.join('')}</div>
+        ${metaHTML}
+        ${creditsHTML}
         <div class="card-links">${linksHTML}</div>
     `;
 }
@@ -391,6 +426,24 @@ document.querySelectorAll('.a11y-size-btn').forEach(btn => {
     });
 });
 document.body.classList.add('text-size-14');
+
+// Font choice (default / OpenDyslexic / Arial / Atkinson)
+const FONT_CLASSES = ['font-opendyslexic', 'font-arial', 'font-atkinson'];
+const FONT_MAP = {
+    opendyslexic: 'font-opendyslexic',
+    arial: 'font-arial',
+    atkinson: 'font-atkinson',
+    default: null,
+};
+document.querySelectorAll('.a11y-font-btn').forEach(btn => {
+    btn.addEventListener('click', () => {
+        document.querySelectorAll('.a11y-font-btn').forEach(b => b.classList.remove('active'));
+        btn.classList.add('active');
+        document.body.classList.remove(...FONT_CLASSES);
+        const cls = FONT_MAP[btn.dataset.font];
+        if (cls) document.body.classList.add(cls);
+    });
+});
 
 // Kick everything off
 loadAudios();
