@@ -6,7 +6,7 @@
     <title>GothicMynx · Audio Masterlist</title>
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-    <link href="https://fonts.googleapis.com/css2?family=Cinzel+Decorative:wght@400;700&family=Quicksand:wght@400;500;600;700&family=Unbounded:wght@400;600;700&family=Cormorant+Garamond:ital,wght@0,400;0,600;1,400&display=swap" rel="stylesheet">
+    <link href="https://fonts.googleapis.com/css2?family=Atkinson+Hyperlegible:wght@400;700&family=Quicksand:wght@400;500;600;700&family=Unbounded:wght@400;600;700&display=swap" rel="stylesheet">
     <link rel="stylesheet" href="style.css">
 </head>
 <body>
@@ -131,10 +131,18 @@
         </button>
         <div class="a11y-menu" id="a11yMenu">
             <span class="a11y-menu-label">Font Size</span>
-            <button class="a11y-size-btn" data-size="0">12</button>
-            <button class="a11y-size-btn active" data-size="1">14</button>
-            <button class="a11y-size-btn" data-size="2">16</button>
-            <button class="a11y-size-btn" data-size="3">18</button>
+            <div class="a11y-size-row">
+                <button class="a11y-size-btn" data-size="0">12</button>
+                <button class="a11y-size-btn active" data-size="1">14</button>
+                <button class="a11y-size-btn" data-size="2">16</button>
+                <button class="a11y-size-btn" data-size="3">18</button>
+            </div>
+            <div class="a11y-divider"></div>
+            <span class="a11y-menu-label">Font</span>
+            <button class="a11y-font-btn active" data-font="default">Default</button>
+            <button class="a11y-font-btn" data-font="opendyslexic">OpenDyslexic</button>
+            <button class="a11y-font-btn" data-font="arial">Arial</button>
+            <button class="a11y-font-btn" data-font="atkinson">Atkinson Hyperlegible</button>
         </div>
     </div>
 
