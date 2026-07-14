@@ -78,11 +78,17 @@
             <div class="sidebar-section">
                 <h3 class="sidebar-heading">Layout</h3>
 
-                <label class="sidebar-label">Cards Per Row</label>
-                <div class="cards-per-row" id="cardsPerRow">
+                <label class="sidebar-label layout-desktop">Cards Per Row</label>
+                <div class="cards-per-row layout-desktop" id="cardsPerRow">
                     <button class="cpr-btn" data-cols="1">1</button>
                     <button class="cpr-btn active" data-cols="2">2</button>
                     <button class="cpr-btn" data-cols="3">3</button>
+                </div>
+
+                <label class="sidebar-label layout-mobile">Card Detail</label>
+                <div class="card-detail layout-mobile" id="cardDetail">
+                    <button class="cpr-btn active" data-detail="full">Detailed</button>
+                    <button class="cpr-btn" data-detail="summary">Summary</button>
                 </div>
             </div>
         </aside>
@@ -157,7 +163,7 @@
 
     <script src="https://cdnjs.cloudflare.com/ajax/libs/three.js/r128/three.min.js"></script>
     <script src="https://cdn.jsdelivr.net/npm/three@0.128.0/examples/js/loaders/GLTFLoader.js"></script>
-    <script src="ship.debug.js"></script>
+    <script src="ship.js"></script>
     <script src="app.js"></script>
 </body>
 </html>
