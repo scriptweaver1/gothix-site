@@ -441,8 +441,12 @@ body {
 .audio-grid.cols-2 { grid-template-columns: repeat(2, minmax(0, 1fr)); }
 .audio-grid.cols-3 { grid-template-columns: repeat(3, minmax(0, 1fr)); }
 
-/* 3-per-row = simplified/compact card: drop the synopsis */
-.audio-grid.cols-3 .card-synopsis { display: none; }
+/* 3-per-row (desktop) or Summary mode (mobile) = compact card: drop synopsis */
+.audio-grid.cols-3 .card-synopsis,
+.audio-grid.summary .card-synopsis { display: none; }
+
+/* Desktop shows the columns picker; mobile shows the detail toggle */
+.layout-mobile { display: none; }
 
 /* ============================================
    ACCESSIBILITY WIDGET
@@ -734,24 +738,15 @@ body {
 .site-footer strong { color: var(--accent); }
 
 /* ============================================
-   TEXT SIZE CLASSES
+   TEXT SIZE  (scales the root font, so every rem-based
+   text on the page grows/shrinks together)
+   14 is the design default (= 100%).
    ============================================ */
 
-.text-size-12 .card-title { font-size: 0.82rem; }
-.text-size-12 .card-tag { font-size: 0.62rem; }
-.text-size-12 .card-meta { font-size: 0.72rem; }
-
-.text-size-14 .card-title { font-size: 1rem; }
-.text-size-14 .card-tag { font-size: 0.75rem; }
-.text-size-14 .card-meta { font-size: 0.85rem; }
-
-.text-size-16 .card-title { font-size: 1.15rem; }
-.text-size-16 .card-tag { font-size: 0.85rem; padding: 0.22rem 0.65rem; }
-.text-size-16 .card-meta { font-size: 0.95rem; }
-
-.text-size-18 .card-title { font-size: 1.3rem; }
-.text-size-18 .card-tag { font-size: 0.95rem; padding: 0.25rem 0.7rem; }
-.text-size-18 .card-meta { font-size: 1.05rem; }
+html.text-size-12 { font-size: 85.7%; }
+html.text-size-14 { font-size: 100%; }
+html.text-size-16 { font-size: 114.3%; }
+html.text-size-18 { font-size: 128.6%; }
 
 /* ============================================
    ACCESSIBILITY FONT OVERRIDES
@@ -798,6 +793,12 @@ body.font-opendyslexic, body.font-arial, body.font-atkinson { --font-display: va
 }
 
 @media (max-width: 600px) {
+    /* Mobile is always single-column; detail toggle replaces the column picker */
+    .audio-grid { grid-template-columns: 1fr !important; }
+    .layout-desktop { display: none !important; }
+    label.layout-mobile { display: block; }
+    div.layout-mobile { display: flex; }
+
     .controls { flex-direction: column; }
     .site-header { padding: 2rem 1rem 1.5rem; }
     .site-title { font-size: 2rem; }
