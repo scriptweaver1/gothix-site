@@ -583,18 +583,31 @@ document.querySelectorAll('#sourceList .category-btn').forEach(btn => {
 });
 
 // Cards per row
-document.querySelectorAll('.cpr-btn').forEach(btn => {
+// Cards-per-row (desktop): swap the cols- class, keep any summary class intact
+document.querySelectorAll('.cpr-btn[data-cols]').forEach(btn => {
     btn.addEventListener('click', () => {
-        document.querySelectorAll('.cpr-btn').forEach(b => b.classList.remove('active'));
+        document.querySelectorAll('.cpr-btn[data-cols]').forEach(b => b.classList.remove('active'));
         btn.classList.add('active');
-        grid.className = 'audio-grid cols-' + btn.dataset.cols;
+        grid.classList.remove('cols-1', 'cols-2', 'cols-3');
+        grid.classList.add('cols-' + btn.dataset.cols);
         update();
     });
 });
-// Default layout: 1 column on phones, 2 on larger screens (all still selectable)
+
+// Card detail (mobile): toggle the summary (compact) card variant
+document.querySelectorAll('.cpr-btn[data-detail]').forEach(btn => {
+    btn.addEventListener('click', () => {
+        document.querySelectorAll('.cpr-btn[data-detail]').forEach(b => b.classList.remove('active'));
+        btn.classList.add('active');
+        grid.classList.toggle('summary', btn.dataset.detail === 'summary');
+    });
+});
+
+// Default layout: 1 column on phones, 2 on larger screens
 const initCols = window.matchMedia('(max-width: 600px)').matches ? '1' : '2';
-grid.className = 'audio-grid cols-' + initCols;
-document.querySelectorAll('.cpr-btn').forEach(b => b.classList.toggle('active', b.dataset.cols === initCols));
+grid.classList.remove('cols-1', 'cols-2', 'cols-3');
+grid.classList.add('cols-' + initCols);
+document.querySelectorAll('.cpr-btn[data-cols]').forEach(b => b.classList.toggle('active', b.dataset.cols === initCols));
 
 // Accessibility widget
 const a11yToggle = document.getElementById('a11yToggle');
@@ -613,11 +626,11 @@ document.querySelectorAll('.a11y-size-btn').forEach(btn => {
     btn.addEventListener('click', () => {
         document.querySelectorAll('.a11y-size-btn').forEach(b => b.classList.remove('active'));
         btn.classList.add('active');
-        document.body.classList.remove(...TEXT_SIZES);
-        document.body.classList.add(TEXT_SIZES[btn.dataset.size]);
+        document.documentElement.classList.remove(...TEXT_SIZES);
+        document.documentElement.classList.add(TEXT_SIZES[btn.dataset.size]);
     });
 });
-document.body.classList.add('text-size-14');
+document.documentElement.classList.add('text-size-14');
 
 // Font choice (default / OpenDyslexic / Arial / Atkinson)
 const FONT_CLASSES = ['font-opendyslexic', 'font-arial', 'font-atkinson'];
