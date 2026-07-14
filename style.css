@@ -711,8 +711,12 @@ body {
     letter-spacing: 0.06em; text-transform: uppercase;
     text-decoration: none; color: #fff;
     border-radius: 99px; border: none;
+    cursor: pointer; touch-action: manipulation;
+    -webkit-tap-highlight-color: rgba(255, 255, 255, 0.25);
     transition: transform 0.2s ease, box-shadow 0.2s ease, background 0.2s ease, filter 0.2s ease;
 }
+/* Icon + label never swallow the tap — the whole button is the hit target */
+.card-link > * { pointer-events: none; }
 .card-link svg { width: 17px; height: 17px; }
 
 .link-reddit  { background: #ff4500; }
@@ -804,6 +808,9 @@ body.font-opendyslexic, body.font-arial, body.font-atkinson { --font-display: va
 
     .main-content { padding-left: 1rem; padding-right: 1rem; }
     .audio-card { padding: 1.1rem 1.15rem; }
+    /* Bigger, wider source buttons = easy tap targets on phones */
+    .card-links { gap: 0.6rem; }
+    .card-link { flex: 1 1 40%; min-height: 46px; padding: 0.7rem 1rem; font-size: 0.78rem; }
     .controls { flex-direction: column; }
     .site-header { padding: 2rem 1rem 1.5rem; }
     .site-title { font-size: 2rem; }
