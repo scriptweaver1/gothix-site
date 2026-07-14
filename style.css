@@ -556,9 +556,11 @@ body {
    AUDIO CARDS
    ============================================ */
 
-.audio-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(320px, 1fr)); gap: 1.25rem; }
+.audio-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(min(100%, 320px), 1fr)); gap: 1.25rem; }
 
 .audio-card {
+    min-width: 0;                 /* allow the card to shrink inside its grid track */
+    overflow-wrap: anywhere;      /* long words / URLs wrap instead of overflowing */
     background:
         linear-gradient(var(--bg-card), var(--bg-card)) padding-box,
         var(--metallic-border) border-box;
@@ -606,7 +608,7 @@ body {
 /* Inner content wrapper for crossfade */
 .card-inner {
     display: flex; flex-direction: column; gap: 0.75rem;
-    flex: 1;
+    flex: 1; min-width: 0;
     transition: opacity 0.3s ease;
 }
 .card-inner.fade-out { opacity: 0; }
@@ -620,10 +622,11 @@ body {
     transition: font-family var(--transition-speed) var(--transition-ease);
 }
 
-.card-tags { display: flex; flex-wrap: wrap; gap: 0.4rem; }
+.card-tags { display: flex; flex-wrap: wrap; gap: 0.4rem; min-width: 0; }
 
 .card-tag {
     font-family: var(--font-body); font-size: 0.75rem; line-height: 1.2;
+    max-width: 100%; overflow-wrap: anywhere; text-align: left;
     padding: 0.2rem 0.6rem; border-radius: var(--tag-radius);
     background: rgba(255, 255, 255, 0.07); color: var(--text-secondary);
     border: 1px solid rgba(255, 255, 255, 0.1);
@@ -799,6 +802,8 @@ body.font-opendyslexic, body.font-arial, body.font-atkinson { --font-display: va
     label.layout-mobile { display: block; }
     div.layout-mobile { display: flex; }
 
+    .main-content { padding-left: 1rem; padding-right: 1rem; }
+    .audio-card { padding: 1.1rem 1.15rem; }
     .controls { flex-direction: column; }
     .site-header { padding: 2rem 1rem 1.5rem; }
     .site-title { font-size: 2rem; }
