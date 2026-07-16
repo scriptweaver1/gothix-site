@@ -739,8 +739,16 @@ body {
     padding: 2rem 1rem 3rem; color: var(--text-muted); font-size: 0.85rem;
 }
 .constellation-divider {
-    display: flex; justify-content: center; gap: 0.6rem; margin-bottom: 1rem;
-    color: var(--accent); font-size: 0.7rem; opacity: 0.5; letter-spacing: 0.3em;
+    position: relative;
+    width: min(70%, 480px); height: 3px;
+    margin: 0 auto 1.25rem;
+}
+/* the flat ledge itself (on a pseudo-element so its color doesn't fade the mascot) */
+.constellation-divider::before {
+    content: '';
+    position: absolute; inset: 0;
+    background: var(--accent); opacity: 0.45; border-radius: 3px;
+    transition: background var(--transition-speed) var(--transition-ease);
 }
 .site-footer strong { color: var(--accent); }
 
@@ -750,18 +758,17 @@ body {
 
 .mascot-peek {
     position: absolute;
-    right: 6%;
-    bottom: 100%;                 /* sit on the footer's top edge... */
-    margin-bottom: -0.5rem;       /* ...tucked so it peeks over it */
+    left: 50%; bottom: 0;                 /* centered, resting on the ledge */
+    transform: translateX(-50%);
     display: flex; flex-direction: column; align-items: center;
     text-decoration: none;
     z-index: 11;
     transition: transform 0.3s var(--transition-ease);
 }
-.mascot-peek:hover { transform: translateY(-8px); }  /* pops up when hovered */
+.mascot-peek:hover { transform: translateX(-50%) translateY(-8px); }  /* pops up when hovered */
 
 .mascot-img {
-    width: clamp(96px, 14vw, 150px); height: auto; display: block;
+    width: clamp(72px, 10.5vw, 112px); height: auto; display: block;
     filter: drop-shadow(0 6px 10px rgba(0, 0, 0, 0.45));
     -webkit-user-drag: none; user-select: none;
 }
@@ -865,8 +872,7 @@ body.font-opendyslexic, body.font-arial, body.font-atkinson { --font-display: va
     .switch-option { padding: 0.45rem 0.8rem; font-size: 0.6rem; }
 
     /* Mascot: keep the bubble on-screen on narrow phones */
-    .mascot-peek { right: 4%; }
-    .mascot-bubble { white-space: normal; max-width: 48vw; font-size: 0.7rem; }
+    .mascot-bubble { white-space: normal; max-width: 60vw; font-size: 0.7rem; }
 }
 
 /* Overflow tag indicator */
