@@ -745,6 +745,54 @@ body {
 .site-footer strong { color: var(--accent); }
 
 /* ============================================
+   PEEKING MASCOT  (links to Reddit profile)
+   ============================================ */
+
+.mascot-peek {
+    position: absolute;
+    right: 6%;
+    bottom: 100%;                 /* sit on the footer's top edge... */
+    margin-bottom: -0.5rem;       /* ...tucked so it peeks over it */
+    display: flex; flex-direction: column; align-items: center;
+    text-decoration: none;
+    z-index: 11;
+    transition: transform 0.3s var(--transition-ease);
+}
+.mascot-peek:hover { transform: translateY(-8px); }  /* pops up when hovered */
+
+.mascot-img {
+    width: clamp(96px, 14vw, 150px); height: auto; display: block;
+    filter: drop-shadow(0 6px 10px rgba(0, 0, 0, 0.45));
+    -webkit-user-drag: none; user-select: none;
+}
+
+.mascot-bubble {
+    position: relative;
+    margin-bottom: 0.5rem;
+    max-width: 60vw;
+    padding: 0.5rem 0.85rem;
+    background: var(--bg-card);
+    color: var(--text-primary);
+    border: 1px solid var(--border-hover);
+    border-radius: 12px;
+    font-family: var(--font-body); font-size: 0.8rem; line-height: 1.3;
+    text-align: center; white-space: nowrap;
+    box-shadow: 0 4px 16px rgba(0, 0, 0, 0.45);
+    transition: border-color 0.25s ease, color 0.25s ease;
+}
+/* little tail pointing down toward the mascot */
+.mascot-bubble::after {
+    content: '';
+    position: absolute; top: 100%; left: 50%; transform: translateX(-50%);
+    border: 7px solid transparent; border-top-color: var(--bg-card);
+    margin-top: -1px;
+}
+.mascot-peek:hover .mascot-bubble {
+    border-color: var(--accent);
+    color: var(--accent);
+}
+
+/* ============================================
    TEXT SIZE  (scales the root font, so every rem-based
    text on the page grows/shrinks together)
    14 is the design default (= 100%).
@@ -815,6 +863,10 @@ body.font-opendyslexic, body.font-arial, body.font-atkinson { --font-display: va
     .site-header { padding: 2rem 1rem 1.5rem; }
     .site-title { font-size: 2rem; }
     .switch-option { padding: 0.45rem 0.8rem; font-size: 0.6rem; }
+
+    /* Mascot: keep the bubble on-screen on narrow phones */
+    .mascot-peek { right: 4%; }
+    .mascot-bubble { white-space: normal; max-width: 48vw; font-size: 0.7rem; }
 }
 
 /* Overflow tag indicator */
