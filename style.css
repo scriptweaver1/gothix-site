@@ -140,6 +140,12 @@
 
 *, *::before, *::after { margin: 0; padding: 0; box-sizing: border-box; }
 
+/* Reliable tapping on touch devices: removes the ~300ms click delay and stops
+   double-tap-to-zoom from swallowing taps on interactive elements. */
+a, button, select, input, label, [role="button"], .card-tag {
+    touch-action: manipulation;
+}
+
 body {
     font-family: var(--font-body);
     background: var(--bg-primary);
@@ -746,7 +752,7 @@ body {
 /* the flat ledge itself (on a pseudo-element so its color doesn't fade the mascot) */
 .constellation-divider::before {
     content: '';
-    position: absolute; inset: 0;
+    position: absolute; inset: 0; pointer-events: none;
     background: var(--accent); opacity: 0.45; border-radius: 3px;
     transition: background var(--transition-speed) var(--transition-ease);
 }
@@ -768,7 +774,7 @@ body {
 .mascot-img {
     width: clamp(72px, 10.5vw, 112px); height: auto; display: block;
     filter: drop-shadow(0 6px 10px rgba(0, 0, 0, 0.45));
-    -webkit-user-drag: none; user-select: none;
+    -webkit-user-drag: none; user-select: none; pointer-events: none;
 }
 
 .mascot-bubble {
@@ -850,6 +856,12 @@ body.font-opendyslexic, body.font-arial, body.font-atkinson { --font-display: va
 
     .main-content { flex-direction: column; padding-top: 3.5rem; }
     .content-area { width: 100%; }
+
+    /* Comfortable tap targets on touch devices (>=~44px) */
+    .category-btn, .cpr-btn { min-height: 44px; }
+    .a11y-size-btn, .a11y-font-btn { min-height: 42px; }
+    .switch-option { min-height: 42px; }
+    .a11y-toggle, .cinematic-toggle, .sidebar-toggle { width: 48px; height: 48px; }
 }
 
 @media (max-width: 600px) {
