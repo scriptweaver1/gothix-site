@@ -1,23 +1,3 @@
-#!/usr/bin/env python3
-"""
-GothicMynx masterlist build script.
-
-Pulls the Reddit and Patreon catalogs straight from their published
-Google Sheet CSV URLs, normalizes everything, merges cross-posted audios
-(same title on both platforms -> one card with both links), and writes a
-single audios.json the website consumes at runtime.
-
-Usage:
-    python build.py
-
-Config: set the two CSV URLs below (or via the REDDIT_CSV_URL /
-PATREON_CSV_URL environment variables, which the GitHub Action uses).
-
-To get a CSV URL: in the Google Sheet, File -> Share -> Publish to web ->
-choose the sheet/tab -> Comma-separated values (.csv) -> Publish, then copy
-the link it gives you.
-"""
-
 import csv
 import io
 import json
@@ -29,7 +9,7 @@ from datetime import datetime, date
 import requests
 
 # ----------------------------------------------------------------------
-# Config  (env vars take priority so the Action can inject them)
+# Config 
 # ----------------------------------------------------------------------
 REDDIT_CSV_URL = os.environ.get(
     "REDDIT_CSV_URL",
