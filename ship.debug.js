@@ -1,6 +1,4 @@
-/* TEMPORARY DEBUG SHIP — parks the model big + centered + on top.
-   If you SEE a slowly spinning gold ship in the middle of the screen,
-   rendering works and we just need to tune size/position/layer.
+tune size/position/layer.
    Swap ship.js back afterward. */
 (function () {
     if (typeof THREE === 'undefined') { console.warn('three.js NOT loaded'); return; }
@@ -37,8 +35,8 @@
         const center=box.getCenter(new THREE.Vector3());
         gltf.scene.position.sub(center);
         ship=new THREE.Group(); ship.add(gltf.scene);
-        ship.scale.setScalar(5);          // big
-        ship.position.set(0,0,-9);         // centered, close
+        ship.scale.setScalar(5);    
+        ship.position.set(0,0,-9);     
         scene.add(ship);
     }, (p)=>console.log('[ship.debug] loading', Math.round((p.loaded/(p.total||1))*100)+'%'),
        (e)=>console.warn('[ship.debug] MODEL FAILED', e));
