@@ -1,5 +1,5 @@
 /* ============================================
-   FONTS  (self-hosted — drop files in /fonts)
+   FONTS 
    ============================================ */
 
 @font-face {
@@ -33,11 +33,8 @@
     --color-mynx-purple: #b388d9;
     --color-mynx-purple-glow: rgba(179, 136, 217, 0.5);
 
-    /* Typography — titles & categories = Zekton, everything else = Toxigenesis.
-       Overridden wholesale by the accessibility font options (see bottom). */
     --font-title: 'Zekton', 'Unbounded', sans-serif;
     --font-body: 'Toxigenesis', 'Quicksand', sans-serif;
-    /* legacy alias so older rules keep working */
     --font-display: var(--font-title);
 }
 
@@ -72,7 +69,7 @@
     --giant-star-haze: rgba(196, 30, 58, 0.06);
 }
 
-/* ——— BOTH (default) ——— */
+/* ——— BOTH ——— */
 [data-persona="both"] {
     --bg-primary: #0b0a12;
     --bg-secondary: #13121e;
@@ -140,8 +137,6 @@
 
 *, *::before, *::after { margin: 0; padding: 0; box-sizing: border-box; }
 
-/* Reliable tapping on touch devices: removes the ~300ms click delay and stops
-   double-tap-to-zoom from swallowing taps on interactive elements. */
 a, button, select, input, label, [role="button"], .card-tag {
     touch-action: manipulation;
 }
@@ -171,14 +166,13 @@ body {
 }
 
 /* ============================================
-   GIANT STAR (background celestial body)
+   STAR 
    ============================================ */
 
 .giant-star {
     position: fixed;
     z-index: 0;
     pointer-events: none;
-    /* Positioned upper-left so the glow radiates across the page */
     top: -8vh;
     left: 12vw;
     width: 40vmax;
@@ -263,18 +257,15 @@ body {
                 text-shadow var(--transition-speed) var(--transition-ease);
 }
 
-/* Gothix → Gothic bright, Mynx dim */
 [data-persona="gothix"] .title-gothic {
     opacity: 1;
     text-shadow: 0 0 40px var(--color-gothic-red-glow), 0 0 80px rgba(196, 30, 58, 0.25);
 }
 [data-persona="gothix"] .title-mynx { opacity: 0.2; text-shadow: none; }
 
-/* Both → both bright */
 [data-persona="both"] .title-gothic { opacity: 1; }
 [data-persona="both"] .title-mynx { opacity: 1; }
 
-/* Minxy → Mynx bright, Gothic dim */
 [data-persona="minxy"] .title-gothic { opacity: 0.2; text-shadow: none; }
 [data-persona="minxy"] .title-mynx {
     opacity: 1;
@@ -389,15 +380,12 @@ body {
 
 .category-list { display: flex; flex-direction: column; gap: 0.3rem; }
 
-/* The categories list can be long — give it its own scroll so the page
-   (the cards) doesn't have to move to reach the bottom of it. */
 #categoryList {
     max-height: 42vh;
     overflow-y: auto;
     padding-right: 4px;
 }
 
-/* Themed slim scrollbar, shared by the sidebar panel and the category list */
 .sidebar, #categoryList {
     scrollbar-width: thin;
     scrollbar-color: var(--border-hover) transparent;
@@ -425,7 +413,6 @@ body {
     border-color: var(--accent);
 }
 
-/* Cards per row */
 .cards-per-row { display: flex; gap: 0.3rem; }
 
 .cpr-btn {
@@ -439,19 +426,15 @@ body {
 .cpr-btn:hover { border-color: var(--border-hover); color: var(--text-primary); }
 .cpr-btn.active { background: var(--accent); border-color: var(--accent); color: var(--bg-primary); }
 
-/* Content area */
 .content-area { flex: 1; min-width: 0; position: relative; z-index: 2; }
 
-/* Grid column overrides */
 .audio-grid.cols-1 { grid-template-columns: minmax(0, 1fr); }
 .audio-grid.cols-2 { grid-template-columns: repeat(2, minmax(0, 1fr)); }
 .audio-grid.cols-3 { grid-template-columns: repeat(3, minmax(0, 1fr)); }
 
-/* 3-per-row (desktop) or Summary mode (mobile) = compact card: drop synopsis */
 .audio-grid.cols-3 .card-synopsis,
 .audio-grid.summary .card-synopsis { display: none; }
 
-/* Desktop shows the columns picker; mobile shows the detail toggle */
 .layout-mobile { display: none; }
 
 /* ============================================
@@ -504,13 +487,11 @@ body {
 .a11y-size-btn:hover { border-color: var(--border-hover); color: var(--text-primary); }
 .a11y-size-btn.active { background: var(--accent); border-color: var(--accent); color: var(--bg-primary); }
 
-/* Font-size buttons sit in a row */
 .a11y-size-row { display: flex; gap: 0.3rem; }
 .a11y-size-row .a11y-size-btn { flex: 1; padding: 0.4rem 0; }
 
 .a11y-divider { height: 1px; background: var(--border-color); margin: 0.5rem 0 0.35rem; }
 
-/* Font choice buttons (stacked) */
 .a11y-font-btn {
     font-size: 0.8rem; font-weight: 600;
     padding: 0.45rem 0.8rem; text-align: left;
@@ -521,7 +502,6 @@ body {
 }
 .a11y-font-btn:hover { border-color: var(--border-hover); color: var(--text-primary); }
 .a11y-font-btn.active { background: var(--accent); border-color: var(--accent); color: var(--bg-primary); }
-/* Preview each option in its own face */
 .a11y-font-btn[data-font="default"]     { font-family: var(--font-body); }
 .a11y-font-btn[data-font="opendyslexic"] { font-family: 'OpenDyslexic', sans-serif; }
 .a11y-font-btn[data-font="arial"]        { font-family: Arial, Helvetica, sans-serif; }
@@ -565,8 +545,8 @@ body {
 .audio-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(min(100%, 320px), 1fr)); gap: 1.25rem; }
 
 .audio-card {
-    min-width: 0;                 /* allow the card to shrink inside its grid track */
-    overflow-wrap: anywhere;      /* long words / URLs wrap instead of overflowing */
+    min-width: 0;                 
+    overflow-wrap: anywhere;  
     background:
         linear-gradient(var(--bg-card), var(--bg-card)) padding-box,
         var(--metallic-border) border-box;
@@ -574,19 +554,15 @@ body {
     border-radius: var(--card-radius); padding: 1.4rem 1.5rem;
     display: flex; flex-direction: column; gap: 0.75rem;
     box-shadow: var(--card-shadow);
-    /* Off-screen cards skip painting entirely — the big win with a long list */
     content-visibility: auto;
     contain-intrinsic-size: auto 360px;
-    /* The metallic gradient + card bg SNAP on theme change (animating a
-       multi-stop gradient across every card was the source of the lag).
-       border-radius still morphs; shadow/transform stay snappy for hover. */
+
     transition: border-radius var(--transition-speed) var(--transition-ease),
                 box-shadow 0.25s ease,
                 transform 0.25s ease,
                 opacity 0.35s ease;
 }
 
-/* Card entrance for truly new cards */
 .audio-card.entering {
     animation: cardFadeIn 0.4s ease both;
 }
@@ -596,7 +572,6 @@ body {
     to { opacity: 1; transform: translateY(0); }
 }
 
-/* Card exit */
 .audio-card.exiting {
     opacity: 0;
     transform: scale(0.96);
@@ -611,7 +586,6 @@ body {
     transform: translateY(-3px);
 }
 
-/* Inner content wrapper for crossfade */
 .card-inner {
     display: flex; flex-direction: column; gap: 0.75rem;
     flex: 1; min-width: 0;
@@ -637,8 +611,6 @@ body {
     background: rgba(255, 255, 255, 0.07); color: var(--text-secondary);
     border: 1px solid rgba(255, 255, 255, 0.1);
     cursor: pointer;
-    /* only hover props animate; border-radius snaps on theme change (there can
-       be 1000+ tags on screen — animating them all was costly) */
     transition: color 0.2s ease, background 0.2s ease, border-color 0.2s ease;
 }
 .card-tag:hover {
@@ -647,11 +619,9 @@ body {
     background: var(--accent-glow);
 }
 
-/* Overflow tags stay hidden until the card is expanded */
 .card-tag-hidden { display: none; }
 .card-tags.expanded .card-tag-hidden { display: inline-block; }
 
-/* The reveal / collapse control */
 .card-tag-toggle {
     font-family: var(--font-title); font-size: 0.66rem; font-weight: 400;
     letter-spacing: 0.04em; text-transform: uppercase;
@@ -668,7 +638,6 @@ body {
 .card-meta { display: flex; align-items: center; gap: 0.75rem; font-size: 0.85rem; color: var(--text-secondary); }
 .card-meta span { display: flex; align-items: center; gap: 0.3rem; }
 
-/* Category badge */
 .card-category {
     align-self: flex-start;
     font-family: var(--font-title); font-size: 0.62rem; font-weight: 400;
@@ -679,13 +648,11 @@ body {
     border: 1px solid var(--border-hover);
 }
 
-/* Synopsis / description */
 .card-synopsis {
     font-family: var(--font-body); font-size: 0.86rem; line-height: 1.5;
     color: var(--text-secondary);
 }
 
-/* Credits block (writer / script / collab / editor) */
 .card-credits {
     display: flex; flex-direction: column; gap: 0.3rem;
     font-family: var(--font-body); font-size: 0.78rem;
@@ -705,7 +672,7 @@ body {
 .card-credits a.credit-value:hover { text-decoration: underline; }
 
 /* ============================================
-   SOURCE BUTTONS (Reddit / Patreon)
+   SOURCE BUTTONS
    ============================================ */
 
 .card-links { display: flex; gap: 0.6rem; margin-top: auto; padding-top: 0.85rem; justify-content: center; flex-wrap: wrap; }
@@ -721,7 +688,6 @@ body {
     -webkit-tap-highlight-color: rgba(255, 255, 255, 0.25);
     transition: transform 0.2s ease, box-shadow 0.2s ease, background 0.2s ease, filter 0.2s ease;
 }
-/* Icon + label never swallow the tap — the whole button is the hit target */
 .card-link > * { pointer-events: none; }
 .card-link svg { width: 17px; height: 17px; }
 
@@ -749,7 +715,6 @@ body {
     width: min(70%, 480px); height: 3px;
     margin: 0 auto 1.25rem;
 }
-/* the flat ledge itself (on a pseudo-element so its color doesn't fade the mascot) */
 .constellation-divider::before {
     content: '';
     position: absolute; inset: 0; pointer-events: none;
@@ -759,12 +724,12 @@ body {
 .site-footer strong { color: var(--accent); }
 
 /* ============================================
-   PEEKING MASCOT  (links to Reddit profile)
+   PEEKING MASCOT
    ============================================ */
 
 .mascot-peek {
     position: absolute;
-    left: 50%; bottom: 0;                 /* centered, resting on the ledge */
+    left: 50%; bottom: 0;          
     transform: translateX(-50%);
     display: flex; flex-direction: column; align-items: center;
     text-decoration: none;
@@ -791,7 +756,6 @@ body {
     box-shadow: 0 4px 16px rgba(0, 0, 0, 0.45);
     transition: border-color 0.25s ease, color 0.25s ease;
 }
-/* little tail pointing down toward the mascot */
 .mascot-bubble::after {
     content: '';
     position: absolute; top: 100%; left: 50%; transform: translateX(-50%);
@@ -804,9 +768,7 @@ body {
 }
 
 /* ============================================
-   TEXT SIZE  (scales the root font, so every rem-based
-   text on the page grows/shrinks together)
-   14 is the design default (= 100%).
+   TEXT SIZE
    ============================================ */
 
 html.text-size-12 { font-size: 85.7%; }
@@ -816,13 +778,11 @@ html.text-size-18 { font-size: 128.6%; }
 
 /* ============================================
    ACCESSIBILITY FONT OVERRIDES
-   (swap the whole UI to a reader-friendly face)
    ============================================ */
 
 body.font-opendyslexic { --font-title: 'OpenDyslexic', sans-serif; --font-body: 'OpenDyslexic', sans-serif; }
 body.font-arial        { --font-title: Arial, Helvetica, sans-serif; --font-body: Arial, Helvetica, sans-serif; }
 body.font-atkinson     { --font-title: 'Atkinson Hyperlegible', sans-serif; --font-body: 'Atkinson Hyperlegible', sans-serif; }
-/* keep the legacy alias pointed at whatever title font is active */
 body.font-opendyslexic, body.font-arial, body.font-atkinson { --font-display: var(--font-title); }
 
 /* ============================================
@@ -857,7 +817,6 @@ body.font-opendyslexic, body.font-arial, body.font-atkinson { --font-display: va
     .main-content { flex-direction: column; padding-top: 3.5rem; }
     .content-area { width: 100%; }
 
-    /* Comfortable tap targets on touch devices (>=~44px) */
     .category-btn, .cpr-btn { min-height: 44px; }
     .a11y-size-btn, .a11y-font-btn { min-height: 42px; }
     .switch-option { min-height: 42px; }
@@ -865,7 +824,6 @@ body.font-opendyslexic, body.font-arial, body.font-atkinson { --font-display: va
 }
 
 @media (max-width: 600px) {
-    /* Mobile is always single-column; detail toggle replaces the column picker */
     .audio-grid { grid-template-columns: 1fr !important; }
     .layout-desktop { display: none !important; }
     label.layout-mobile { display: block; }
@@ -873,7 +831,6 @@ body.font-opendyslexic, body.font-arial, body.font-atkinson { --font-display: va
 
     .main-content { padding-left: 1rem; padding-right: 1rem; }
     .audio-card { padding: 1.1rem 1.15rem; }
-    /* Bigger, wider source buttons = easy tap targets on phones */
     .card-links { gap: 0.6rem; }
     .card-link { flex: 1 1 40%; min-height: 46px; padding: 0.7rem 1rem; font-size: 0.78rem; }
     .controls { flex-direction: column; }
@@ -881,11 +838,8 @@ body.font-opendyslexic, body.font-arial, body.font-atkinson { --font-display: va
     .site-title { font-size: 2rem; }
     .switch-option { padding: 0.45rem 0.8rem; font-size: 0.6rem; }
 
-    /* Mascot: keep the bubble on-screen on narrow phones */
     .mascot-bubble { white-space: normal; max-width: 60vw; font-size: 0.7rem; }
 }
-
-/* Overflow tag indicator */
 
 /* ============================================
    CINEMATIC MODE
@@ -908,7 +862,6 @@ body.font-opendyslexic, body.font-arial, body.font-atkinson { --font-display: va
 body.cinematic .cinematic-toggle .icon-on { display: none; }
 body.cinematic .cinematic-toggle .icon-off { display: block; }
 
-/* Fade everything except the background + ship + this button */
 .site-header,
 .main-content,
 .site-footer,
@@ -925,7 +878,6 @@ body.cinematic .sidebar-toggle {
     pointer-events: none;
 }
 
-/* Keep the toggle reachable but unobtrusive while immersed */
 body.cinematic .cinematic-toggle {
     opacity: 0.3;
     background: transparent;
