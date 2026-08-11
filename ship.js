@@ -1,32 +1,24 @@
-/* ============================================
-   BACKGROUND SPACESHIP  (slow drifting GLB)
-   Requires THREE + GLTFLoader loaded before this file.
-   ============================================ */
 (function () {
     if (typeof THREE === 'undefined') { console.warn('three.js not loaded; ship skipped'); return; }
 
     const MODEL_URL   = 'ship.glb';
     const FOV          = 45;
-    const DEPTH_MIN    = 8;     // nearer  -> ship looks bigger (big, prominent pass)
-    const DEPTH_MAX    = 18;    // farther -> ship looks smaller (still visible, not tiny)
-    const SCALE        = 4.5;   // world size of the ship
-    const DUR_MIN      = 150;   // seconds for one crossing
+    const DEPTH_MIN    = 8;     
+    const DEPTH_MAX    = 18;   
+    const SCALE        = 4.5;  
+    const DUR_MIN      = 150;  
     const DUR_MAX      = 200;
-    const TARGET_FPS   = 30;    // cap: the drift is slow, 30 is plenty
+    const TARGET_FPS   = 30;   
     const FRAME_MS     = 1000 / TARGET_FPS;
 
-    /* ---- Orientation: the ship flies nose-first along its travel direction ----
-       The model's nose is its long axis (X). NOSE_SIGN flips which end leads;
-       if it ever flies tail-first, change +1 to -1.
-       FACE_TILT turns it slightly toward the camera so you see front + side
-       instead of a flat broadside. */
-    const NOSE_SIGN   = -1;      // +1 or -1 if it flies backwards
-    const FACE_TILT   = 0.55;   // radians (~31 deg) toward camera for a 3/4 view
-    const BASE_PITCH  = 0.05;   // slight nose tilt up/down
-    const VARY_TILT   = 0.18;   // per-pass variety in the 3/4 angle
+
+    const NOSE_SIGN   = -1;     
+    const FACE_TILT   = 0.55;  
+    const BASE_PITCH  = 0.05;  
+    const VARY_TILT   = 0.18;  
     const VARY_PITCH  = 0.08;
-    const SWAY_AMP    = 0.06;   // gentle bob (~3.5 deg)
-    const SWAY_SPEED  = 0.12;   // slow
+    const SWAY_AMP    = 0.06;   
+    const SWAY_SPEED  = 0.12;   
 
     // --- Renderer (transparent, lightweight) ---
     const renderer = new THREE.WebGLRenderer({
@@ -47,12 +39,10 @@
     });
     document.body.appendChild(canvas);
 
-    // --- Scene / camera ---
     const scene = new THREE.Scene();
     const camera = new THREE.PerspectiveCamera(FOV, window.innerWidth / window.innerHeight, 0.1, 100);
-    camera.position.set(0, 0, 0); // looks down -Z; ship lives at negative z
+    camera.position.set(0, 0, 0); 
 
-    // --- Lights (gold ship reads best with a warm key + cool fill) ---
     scene.add(new THREE.AmbientLight(0x404058, 1.1));
     const key = new THREE.DirectionalLight(0xfff2d8, 1.5);
     key.position.set(3, 4, 2);
@@ -60,19 +50,18 @@
     const rim = new THREE.DirectionalLight(0x88aaff, 0.6);
     rim.position.set(-4, -2, -3);
     scene.add(rim);
-
-    // --- Environment map (metals need something to reflect or they go black) ---
+-
     (function setupEnv() {
         const c = document.createElement('canvas');
         c.width = 128; c.height = 64;
         const g = c.getContext('2d');
         const grad = g.createLinearGradient(0, 0, 0, 64);
-        grad.addColorStop(0.0, '#5a5170');   // top: soft cool light
+        grad.addColorStop(0.0, '#5a5170');
         grad.addColorStop(0.45, '#2a2436');
         grad.addColorStop(0.7, '#1a1420');
-        grad.addColorStop(1.0, '#08060c');   // bottom: near black
+        grad.addColorStop(1.0, '#08060c');   
         g.fillStyle = grad; g.fillRect(0, 0, 128, 64);
-        // a warm glow patch so the gold catches a highlight
+
         const warm = g.createRadialGradient(90, 20, 2, 90, 20, 40);
         warm.addColorStop(0, 'rgba(255, 220, 150, 0.55)');
         warm.addColorStop(1, 'rgba(255, 220, 150, 0)');
@@ -86,7 +75,7 @@
         pmrem.dispose();
     })();
 
-    // --- Journey state ---
+ 
     let ship = null;
     const journey = { start: new THREE.Vector3(), end: new THREE.Vector3(), depth: 12,
                       duration: 180, elapsed: 0,
@@ -104,23 +93,21 @@
         const depth = DEPTH_MIN + Math.random() * (DEPTH_MAX - DEPTH_MIN);
         const { halfW, halfH } = frameHalfExtents(depth);
         const frameR = Math.sqrt(halfW * halfW + halfH * halfH);
-        const R = frameR * 1.4 + SCALE * 1.2;   // spawn/exit fully off-frame
+        const R = frameR * 1.4 + SCALE * 1.2;  
 
-        const theta = Math.random() * Math.PI * 2;         // travel direction
+        const theta = Math.random() * Math.PI * 2;        
         const dir = new THREE.Vector2(Math.cos(theta), Math.sin(theta));
         const perp = new THREE.Vector2(-dir.y, dir.x);
-        const off = (Math.random() * 2 - 1) * frameR * 0.75; // sideways offset -> varied paths
+        const off = (Math.random() * 2 - 1) * frameR * 0.75; 
 
         journey.depth = depth;
         journey.duration = DUR_MIN + Math.random() * (DUR_MAX - DUR_MIN);
-        // On page load, begin partway through so a ship is already on screen
+   
         journey.elapsed = firstJourney ? journey.duration * (0.3 + Math.random() * 0.35) : 0;
         firstJourney = false;
         journey.start.set(perp.x * off - dir.x * R, perp.y * off - dir.y * R, -depth);
         journey.end.set(  perp.x * off + dir.x * R, perp.y * off + dir.y * R, -depth);
 
-        // Orient so the nose (local +X) flies along the travel direction, angled
-        // toward the camera so we see the front + a side (3/4 view), staying upright.
         const phi = Math.atan2(dir.y, dir.x);
         const tiltZ = Math.tan(FACE_TILT + (Math.random() * 2 - 1) * VARY_TILT);
         const heading = new THREE.Vector3(
@@ -143,10 +130,8 @@
         }
     }
 
-    // --- Load model ---
     new THREE.GLTFLoader().load(MODEL_URL, (gltf) => {
         ship = gltf.scene;
-        // center the model on its own bounding box, then scale
         const box = new THREE.Box3().setFromObject(ship);
         const center = box.getCenter(new THREE.Vector3());
         ship.position.sub(center);
@@ -158,7 +143,6 @@
         newJourney();
     }, undefined, (err) => console.warn('ship model failed to load:', err));
 
-    // --- Animation loop (fps-capped, pauses when tab hidden) ---
     let lastTime = performance.now();
     let acc = 0;
 
@@ -166,7 +150,7 @@
         requestAnimationFrame(tick);
         if (document.hidden) { lastTime = now; return; }
 
-        const dt = Math.min(now - lastTime, 100); // clamp big gaps
+        const dt = Math.min(now - lastTime, 100);
         lastTime = now;
         acc += dt;
         if (acc < FRAME_MS) return;
@@ -176,10 +160,8 @@
             journey.elapsed += dt / 1000;
             let t = journey.elapsed / journey.duration;
             if (t >= 1) { newJourney(); t = 0; }
-            // gentle ease so entry/exit aren't abrupt
             const e = t * t * (3 - 2 * t);
             ship.position.lerpVectors(journey.start, journey.end, e);
-            // gentle sway around the travel-facing orientation — never tumbles
             const ph = journey.swayPhase + journey.elapsed * SWAY_SPEED;
             ship.quaternion.copy(journey.baseQuat);
             ship.rotateX(Math.sin(ph) * SWAY_AMP);
@@ -190,7 +172,6 @@
     }
     requestAnimationFrame(tick);
 
-    // --- Resize ---
     window.addEventListener('resize', () => {
         camera.aspect = window.innerWidth / window.innerHeight;
         camera.updateProjectionMatrix();
