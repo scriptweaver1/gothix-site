@@ -5,7 +5,7 @@
 const canvas = document.getElementById('starfield');
 const ctx = canvas.getContext('2d');
 let stars = [];
-let starRGB = [255, 200, 200];
+let starRGB = [255, 200, 200]; // cached; refreshed only on persona change
 
 function refreshStarColor() {
     const raw = getComputedStyle(document.documentElement).getPropertyValue('--star-color').trim();
@@ -138,9 +138,10 @@ function escapeHtml(str) {
 }
 
 function redditUserLinks(value) {
+    // A field may hold one or several usernames (comma / & / "and" separated).
     const parts = String(value).split(/\s*(?:,|&|\band\b)\s*/i).filter(Boolean);
     return parts.map(raw => {
-        const name = raw.trim().replace(/^\/?u\//i, '').trim();
+        const name = raw.trim().replace(/^\/?u\//i, '').trim(); // strip u/ or /u/
         if (/^[A-Za-z0-9_-]{3,20}$/.test(name)) {
             return `<a class="credit-value" href="https://www.reddit.com/user/${encodeURIComponent(name)}" target="_blank" rel="noopener">u/${escapeHtml(name)}</a>`;
         }
@@ -159,12 +160,15 @@ function buildCardInner(a) {
         tagsHTML += `<button type="button" class="card-tag card-tag-toggle" data-action="toggle-tags" data-more="${extra}">+${extra} more</button>`;
     }
 
+    // Category badge
     const categoryHTML = a.category
         ? `<div class="card-category">${escapeHtml(a.category)}</div>` : '';
 
+    // Synopsis / description
     const synopsisHTML = a.synopsis
         ? `<p class="card-synopsis">${escapeHtml(a.synopsis)}</p>` : '';
 
+    // Credits: writer, script, collab, editor (usernames link to Reddit)
     const credits = [];
     if (a.writer) {
         credits.push(`<div class="credit-row"><span class="credit-label">Writer</span><span class="credit-value">${redditUserLinks(a.writer)}</span></div>`);
@@ -180,6 +184,7 @@ function buildCardInner(a) {
     }
     const creditsHTML = credits.length ? `<div class="card-credits">${credits.join('')}</div>` : '';
 
+    // Source buttons with icon + label
     let linksHTML = '';
     if (a.redditLink) linksHTML += `<a href="${escapeHtml(a.redditLink)}" target="_blank" rel="noopener" class="card-link link-reddit" title="View on Reddit">${redditIcon}<span>Reddit</span></a>`;
     if (a.patreonLink) linksHTML += `<a href="${escapeHtml(a.patreonLink)}" target="_blank" rel="noopener" class="card-link link-patreon" title="View on Patreon">${patreonIcon}<span>Patreon</span></a>`;
@@ -202,6 +207,7 @@ function buildCardInner(a) {
     `;
 }
 
+// Persistent card slot elements
 let cardSlots = [];
 let isTransitioning = false;
 let pendingUpdate = false;
@@ -285,11 +291,20 @@ function update() {
     }, FADE_MS);
 }
 
+/* ============================================
+   SMART TAG SEARCH
+   Layer 1 — normalization: "Deep Throat", "Deep-Throat" and "Deepthroat"
+   all become "deepthroat", so spelling/punctuation never matters.
+   Layer 2 — concept groups: different words for the same idea (BJ ↔
+   Blowjob, Tits ↔ Breasts ↔ Boobs...) match each other. Groups are
+   built from the actual tag corpus used across the masterlist.
+   ============================================ */
 
 function normTag(s) {
     return String(s || '').toLowerCase().replace(/[^a-z0-9]/g, '');
 }
 
+// Each group is a list of NORMALIZED terms that mean the same concept.
 const CONCEPT_GROUPS = [
     ['bj', 'blowjob', 'cocksucking', 'suckingyourcock', 'glucks', 'sloppybj'],
     ['hj', 'handjob', 'strokeit', 'fuckmyhand', 'reacharound'],
@@ -354,6 +369,7 @@ const CONCEPT_GROUPS = [
     ['fantasy', 'magic', 'mythology', 'dnd', 'rpg', 'warhammer', 'elf', 'witch'],
 ];
 
+// term -> set of group indices (a term can appear in several groups)
 const TERM_INDEX = new Map();
 CONCEPT_GROUPS.forEach((terms, gi) => {
     terms.forEach(t => {
@@ -362,8 +378,11 @@ CONCEPT_GROUPS.forEach((terms, gi) => {
     });
 });
 
+// Terms too ambiguous for substring matching ("mdom" is inside "feMDOM",
+// "ass" is inside "pASSionate"...) — these only match as the whole tag/query.
 const EXACT_ONLY = new Set(['mdom', 'msub', 'ass', 'sir', 'edge', 'toy', 'fap', 'sub']);
 
+// Which concept groups does a normalized string belong to?
 function conceptsOf(norm) {
     const out = new Set();
     if (!norm) return out;
@@ -372,6 +391,7 @@ function conceptsOf(norm) {
         if (EXACT_ONLY.has(term)) {
             hit = (norm === term);
         } else {
+            // tag contains the term, or (for queries) the term starts with the query
             hit = norm.includes(term) || (norm.length >= 3 && term.startsWith(norm));
         }
         if (hit) groups.forEach(g => out.add(g));
@@ -379,24 +399,56 @@ function conceptsOf(norm) {
     return out;
 }
 
-function tokenMatches(audio, token) {
+// Relevance tiers for a single word/token against an audio.
+// Higher = more exact. 0 = no match. (uses precomputed norms)
+//   5 exact tag   4 phrase in title   3 tag contains it
+//   2 in synopsis 1 concept/synonym only
+function tokenRelevance(audio, token) {
     const nq = normTag(token);
-    if (!nq) return true;
-    if ((audio.title || '').toLowerCase().includes(token)) return true;
-    if ((audio.synopsis || '').toLowerCase().includes(token)) return true;
-    if (audio._normTags.some(nt => nt.includes(nq))) return true;
-    const qGroups = conceptsOf(nq);
-    if (qGroups.size) {
-        for (const g of audio._tagGroups) if (qGroups.has(g)) return true;
-    }
-    return false;
+    if (!nq) return 0;
+    if (audio._normTags.some(t => t === nq)) return 5;                 // exact tag
+    if (audio._normTitle.includes(nq) ||
+        (audio.title || '').toLowerCase().includes(token)) return 4;   // in the title
+    if (audio._normTags.some(t => t.includes(nq))) return 3;           // tag contains it
+    if (audio._normSyn.includes(nq) ||
+        (audio.synopsis || '').toLowerCase().includes(token)) return 2;// in the synopsis
+    const qGroups = conceptsOf(nq);                                    // related concept only
+    if (qGroups.size) { for (const g of audio._tagGroups) if (qGroups.has(g)) return 1; }
+    return 0;
 }
 
+// Relevance of the whole query (handles phrases and multi-word AND).
+function searchRelevance(audio, query) {
+    const words = query.split(/\s+/).filter(w => w.length > 1);
+    if (words.length <= 1) return tokenRelevance(audio, query);
+
+    // Whole phrase, exact/direct (e.g. "deep throat" -> "deepthroat")
+    const nq = normTag(query);
+    if (audio._normTags.some(t => t === nq)) return 6;                            // exact tag
+    if (audio._normTitle.includes(nq) ||
+        (audio.title || '').toLowerCase().includes(query)) return 5;             // phrase in title
+    if (audio._normTags.some(t => t.includes(nq))) return 4;                     // phrase in a tag
+
+    // Otherwise every word must match on its own; rank by the weakest word,
+    // so all-exact multi-word matches sit above mixed exact/fuzzy ones.
+    let weakest = Infinity;
+    for (const w of words) {
+        const r = tokenRelevance(audio, w);
+        if (r === 0) return 0;
+        weakest = Math.min(weakest, r);
+    }
+    return weakest;
+}
+
+// Precompute per-audio normalized tags/title/synopsis + concept groups (once, after load)
 function indexAudios() {
     AUDIOS.forEach(a => {
         a._normTags = (a.tags || []).map(normTag);
+        a._normTitle = normTag(a.title);
+        a._normSyn = normTag(a.synopsis);
         const groups = new Set();
         a._normTags.forEach(nt => conceptsOf(nt).forEach(g => groups.add(g)));
+        // category counts as a searchable concept too
         conceptsOf(normTag(a.category)).forEach(g => groups.add(g));
         a._tagGroups = groups;
     });
@@ -409,28 +461,34 @@ function getFilteredSorted() {
     if (persona === 'gothix') audios = audios.filter(a => a.persona === 'Gothix');
     else if (persona === 'minxy') audios = audios.filter(a => a.persona === 'Minxy');
 
+    // Source is derived from which links an audio actually has
     if (activeSource === 'reddit') audios = audios.filter(a => a.redditLink);
     else if (activeSource === 'patreon') audios = audios.filter(a => a.patreonLink);
 
     if (activeCategory !== 'all') audios = audios.filter(a => a.category === activeCategory);
 
+    // Chosen sort — used on its own with no query, and as the tiebreak within
+    // each relevance tier when there is a query.
+    const sort = sortSelect.value;
+    const bySort = (a, b) => {
+        if (sort === 'oldest') return (a.date || '').localeCompare(b.date || '');
+        if (sort === 'title') return (a.title || '').localeCompare(b.title || '');
+        return (b.date || '').localeCompare(a.date || ''); // newest (default)
+    };
+
     const query = searchInput.value.toLowerCase().trim();
     if (query) {
-        const words = query.split(/\s+/).filter(w => w.length > 1);
+        // Score, keep matches, then rank: exact first, related after.
+        const score = new Map();
         audios = audios.filter(a => {
-            if (words.length <= 1) return tokenMatches(a, query);
-            if ((a.title || '').toLowerCase().includes(query)) return true;
-            if ((a.synopsis || '').toLowerCase().includes(query)) return true;
-            const nq = normTag(query);
-            if (a._normTags.some(nt => nt.includes(nq))) return true;
-            return words.every(w => tokenMatches(a, w));
+            const r = searchRelevance(a, query);
+            if (r > 0) { score.set(a, r); return true; }
+            return false;
         });
+        audios.sort((a, b) => (score.get(b) - score.get(a)) || bySort(a, b));
+    } else {
+        audios.sort(bySort);
     }
-
-    const sort = sortSelect.value;
-    if (sort === 'newest') audios.sort((a, b) => (b.date || '').localeCompare(a.date || ''));
-    else if (sort === 'oldest') audios.sort((a, b) => (a.date || '').localeCompare(b.date || ''));
-    else if (sort === 'title') audios.sort((a, b) => (a.title || '').localeCompare(b.title || ''));
 
     return audios;
 }
@@ -460,6 +518,7 @@ function initialRender() {
 
 function buildCategoryButtons() {
     const list = document.getElementById('categoryList');
+    // Remove any pre-existing category buttons except "All"
     list.querySelectorAll('.category-btn:not([data-category="all"])').forEach(b => b.remove());
 
     const cats = [...new Set(AUDIOS.map(a => a.category).filter(Boolean))]
@@ -490,6 +549,7 @@ function buildCategoryButtons() {
 
 async function loadAudios() {
     try {
+        // Cache-bust so Cloudflare never serves a stale catalog after a rebuild
         const resp = await fetch(`audios.json?v=${Date.now()}`, { cache: 'no-store' });
         if (!resp.ok) throw new Error(`HTTP ${resp.status}`);
         AUDIOS = await resp.json();
@@ -512,8 +572,12 @@ async function loadAudios() {
 searchInput.addEventListener('input', update);
 sortSelect.addEventListener('change', update);
 
+// Card interactions (delegated, since cards are rebuilt on every filter):
+//  - clicking a tag fills the search box (smart matching kicks in)
+//  - the "+N more" button reveals/hides the rest of that card's tags
 grid.addEventListener('click', (e) => {
-
+    // Source buttons: open via window.open (dynamically-created target=_blank
+    // links are unreliable on mobile/iOS Chrome)
     const link = e.target.closest('.card-link, a.credit-value');
     if (link && link.href) {
         e.preventDefault();
@@ -535,6 +599,7 @@ grid.addEventListener('click', (e) => {
     }
 });
 
+// Source buttons (sidebar)
 document.querySelectorAll('#sourceList .category-btn').forEach(btn => {
     btn.addEventListener('click', () => {
         document.querySelectorAll('#sourceList .category-btn').forEach(b => b.classList.remove('active'));
@@ -544,6 +609,8 @@ document.querySelectorAll('#sourceList .category-btn').forEach(btn => {
     });
 });
 
+// Cards per row
+// Cards-per-row (desktop): swap the cols- class, keep any summary class intact
 document.querySelectorAll('.cpr-btn[data-cols]').forEach(btn => {
     btn.addEventListener('click', () => {
         document.querySelectorAll('.cpr-btn[data-cols]').forEach(b => b.classList.remove('active'));
@@ -554,6 +621,7 @@ document.querySelectorAll('.cpr-btn[data-cols]').forEach(btn => {
     });
 });
 
+// Card detail (mobile): toggle the summary (compact) card variant
 document.querySelectorAll('.cpr-btn[data-detail]').forEach(btn => {
     btn.addEventListener('click', () => {
         document.querySelectorAll('.cpr-btn[data-detail]').forEach(b => b.classList.remove('active'));
@@ -562,11 +630,13 @@ document.querySelectorAll('.cpr-btn[data-detail]').forEach(btn => {
     });
 });
 
+// Default layout: 1 column on phones, 2 on larger screens
 const initCols = window.matchMedia('(max-width: 600px)').matches ? '1' : '2';
 grid.classList.remove('cols-1', 'cols-2', 'cols-3');
 grid.classList.add('cols-' + initCols);
 document.querySelectorAll('.cpr-btn[data-cols]').forEach(b => b.classList.toggle('active', b.dataset.cols === initCols));
 
+// Accessibility widget
 const a11yToggle = document.getElementById('a11yToggle');
 const a11yMenu = document.getElementById('a11yMenu');
 
@@ -589,6 +659,7 @@ document.querySelectorAll('.a11y-size-btn').forEach(btn => {
 });
 document.documentElement.classList.add('text-size-14');
 
+// Font choice (default / OpenDyslexic / Arial / Atkinson)
 const FONT_CLASSES = ['font-opendyslexic', 'font-arial', 'font-atkinson'];
 const FONT_MAP = {
     opendyslexic: 'font-opendyslexic',
@@ -606,6 +677,7 @@ document.querySelectorAll('.a11y-font-btn').forEach(btn => {
     });
 });
 
+// Kick everything off
 loadAudios();
 
 /* ============================================
@@ -617,6 +689,7 @@ cinematicToggle.addEventListener('click', () => {
     const on = document.body.classList.toggle('cinematic');
     cinematicToggle.title = on ? 'Exit cinematic mode' : 'Cinematic mode';
     cinematicToggle.setAttribute('aria-label', cinematicToggle.title);
+    // close the a11y menu if it was open
     if (on) a11yMenu.classList.remove('open');
 });
 document.addEventListener('keydown', (e) => {
